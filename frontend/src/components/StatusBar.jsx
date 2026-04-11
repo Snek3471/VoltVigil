@@ -1,4 +1,4 @@
-const StatusBar = ({ isConnected, alertCount, mlOnline }) => {
+const StatusBar = ({ isConnected, alertCount }) => {
   return (
     <header className="flex items-center justify-between px-6 py-3 bg-[#1e293b] border-b border-[#334155] shadow-md">
       {/* Logo / Name */}
@@ -25,26 +25,13 @@ const StatusBar = ({ isConnected, alertCount, mlOnline }) => {
       </div>
 
       {/* Right side stats */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-6">
         <div className="text-sm text-slate-400">
           Total Alerts:{' '}
           <span className="text-white font-semibold">{alertCount}</span>
         </div>
 
-        {/* ML service status */}
-        <div className="flex items-center gap-1.5" title={mlOnline ? 'ML service online' : 'ML service offline — using threshold fallback'}>
-          <span className="text-sm leading-none">🤖</span>
-          <span
-            className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              mlOnline ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-slate-500'
-            }`}
-          />
-          <span className={`text-xs hidden sm:block ${mlOnline ? 'text-green-400' : 'text-slate-500'}`}>
-            {mlOnline ? 'ML Online' : 'ML Offline'}
-          </span>
-        </div>
-
-        {/* Socket.io connection status */}
+        {/* Connection status */}
         <div className="flex items-center gap-2">
           <span
             className={`w-2.5 h-2.5 rounded-full ${

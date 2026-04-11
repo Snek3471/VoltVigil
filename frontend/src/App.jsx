@@ -7,7 +7,6 @@ import FFTChart from './components/FFTChart';
 import AlertFeed from './components/AlertFeed';
 import SensorList from './components/SensorList';
 import useSocket from './hooks/useSocket';
-import useMLStatus from './hooks/useMLStatus';
 import { getAlerts } from './services/api';
 
 const MAX_ALERTS = 50;
@@ -19,7 +18,6 @@ const App = () => {
   const [error, setError] = useState(null);
 
   const { isConnected, latestAlert } = useSocket();
-  const mlOnline = useMLStatus();
 
   // Initial fetch
   const fetchAlerts = useCallback(async () => {
@@ -51,7 +49,7 @@ const App = () => {
 
   return (
     <div className="h-screen bg-[#0f172a] text-white flex flex-col overflow-hidden">
-      <StatusBar isConnected={isConnected} alertCount={alerts.length} mlOnline={mlOnline} />
+      <StatusBar isConnected={isConnected} alertCount={alerts.length} />
       <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* ── Home tab ─────────────────────────────────────────────────── */}

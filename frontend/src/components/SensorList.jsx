@@ -263,91 +263,6 @@ const RiskZoneMap = ({ node, severity }) => {
 };
 
 // ---------------------------------------------------------------------------
-// MLPredictionPanel
-// ---------------------------------------------------------------------------
-
-const BREAKDOWN_LABEL = {
-  frequencyRisk: 'Frequency Risk',
-  regionRisk:    'Region Risk',
-  behaviorRisk:  'Behavior Risk',
-};
-
-const MLPredictionPanel = ({ mlConfidence, mlFeatureBreakdown, severitySource, severity }) => {
-  const isML      = severitySource === 'ml';
-  const hasData   = mlConfidence !== null && mlConfidence !== undefined;
-  const barColor  = SEVERITY_COLOR[severity] || SEVERITY_COLOR.unknown;
-  const confidencePct = hasData ? Math.round(mlConfidence * 100) : 0;
-
-  return (
-    <div className="bg-[#0f172a] border border-[#334155] rounded-lg p-4 space-y-3">
-      <SectionHeading>🤖 ML Severity Prediction</SectionHeading>
-
-      {!hasData ? (
-        <p className="text-slate-500 text-sm">
-          ML service offline — alert severity determined by threshold rules.
-        </p>
-      ) : (
-        <>
-          {/* Predicted severity + source badge */}
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-slate-400 text-sm">Predicted</span>
-            <div className="flex items-center gap-2">
-              <SeverityBadge severity={severity} />
-              {!isML && (
-                <span className="text-xs text-slate-400 bg-slate-700/60 border border-slate-600/40 px-2 py-0.5 rounded-full">
-                  Rule Based
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Confidence bar */}
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Confidence</span>
-              <span className="text-slate-200 font-medium tabular-nums">{confidencePct}%</span>
-            </div>
-            <div className="w-full bg-[#334155] rounded-full h-2 overflow-hidden">
-              <div
-                className="h-2 rounded-full transition-all duration-500"
-                style={{ width: `${confidencePct}%`, backgroundColor: barColor }}
-              />
-            </div>
-          </div>
-
-          {/* Source */}
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-400">Source</span>
-            <span className={isML ? 'text-green-400 font-medium' : 'text-slate-400'}>
-              {isML ? 'ML Model' : 'Threshold Rules'}
-            </span>
-          </div>
-
-          {/* Feature breakdown */}
-          {mlFeatureBreakdown && (
-            <div className="pt-2 border-t border-[#334155] space-y-1.5">
-              <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
-                Feature Breakdown
-              </p>
-              {Object.entries(mlFeatureBreakdown).map(([key, value]) => (
-                <div key={key} className="flex justify-between text-sm">
-                  <span className="text-slate-400">{BREAKDOWN_LABEL[key] || key}</span>
-                  <span className="text-slate-200 capitalize">{value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <p className="text-xs italic text-slate-600 leading-relaxed pt-1">
-            ⚠️ Model trained on simulated data. Accuracy improves post-deployment.
-          </p>
-        </>
-      )}
-    </div>
-  );
-};
-
-// ---------------------------------------------------------------------------
 // ThreatAssessment
 // ---------------------------------------------------------------------------
 
@@ -440,21 +355,15 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
       (!node.timestamp || new Date(liveAlert.timestamp) >= new Date(node.timestamp))
     ) {
       return {
-        severity:           liveAlert.severity,
-        peakFrequency:      liveAlert.peakFrequency,
-        timestamp:          liveAlert.timestamp,
-        mlConfidence:       liveAlert.mlConfidence       ?? null,
-        mlFeatureBreakdown: liveAlert.mlFeatureBreakdown ?? null,
-        severitySource:     liveAlert.severitySource     ?? 'threshold',
+        severity:      liveAlert.severity,
+        peakFrequency: liveAlert.peakFrequency,
+        timestamp:     liveAlert.timestamp,
       };
     }
     return {
-      severity:           node.severity,
-      peakFrequency:      node.peakFrequency,
-      timestamp:          node.timestamp,
-      mlConfidence:       node.mlConfidence       ?? null,
-      mlFeatureBreakdown: node.mlFeatureBreakdown ?? null,
-      severitySource:     node.severitySource     ?? 'threshold',
+      severity:      node.severity,
+      peakFrequency: node.peakFrequency,
+      timestamp:     node.timestamp,
     };
   }, [node, liveAlert]);
 
@@ -547,15 +456,7 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
             </p>
           </div>
 
-          {/* Section 3: ML Prediction */}
-          <MLPredictionPanel
-            mlConfidence={current.mlConfidence}
-            mlFeatureBreakdown={current.mlFeatureBreakdown}
-            severitySource={current.severitySource}
-            severity={current.severity}
-          />
-
-          {/* Sections 4 & 5 side by side */}
+          {/* Sections 3 & 4 side by side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ThreatAssessment
               freqRisk={freqRisk}
@@ -594,15 +495,12 @@ const SensorList = ({ alerts, liveAlert }) => {
       }
     });
     return Object.values(latestByNode).map((alert) => ({
-      nodeId:             alert.nodeId,
-      lat:                alert.lat,
-      lng:                alert.lng,
-      severity:           alert.severity,
-      peakFrequency:      alert.peakFrequency,
-      timestamp:          alert.timestamp,
-      mlConfidence:       alert.mlConfidence       ?? null,
-      mlFeatureBreakdown: alert.mlFeatureBreakdown ?? null,
-      severitySource:     alert.severitySource     ?? 'threshold',
+      nodeId:        alert.nodeId,
+      lat:           alert.lat,
+      lng:           alert.lng,
+      severity:      alert.severity,
+      peakFrequency: alert.peakFrequency,
+      timestamp:     alert.timestamp,
     }));
   }, [alerts]);
 

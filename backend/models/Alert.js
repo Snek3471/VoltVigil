@@ -26,19 +26,6 @@ const alertSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  mlConfidence: {
-    type: Number,
-    default: null,
-  },
-  mlFeatureBreakdown: {
-    type: Object,
-    default: null,
-  },
-  severitySource: {
-    type: String,
-    enum: ['ml', 'threshold'],
-    default: 'threshold',
-  },
 });
 
 module.exports = mongoose.model('Alert', alertSchema);
