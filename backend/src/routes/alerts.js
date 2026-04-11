@@ -54,13 +54,44 @@ router.get('/', async (req, res) => {
   try {
     const { nodeId, severity, from, to, limit = 100, skip = 0 } = req.query;
 
+    // Sanitize inputs to prevent NoSQL injection:
+    // – cast string fields to String so object payloads (e.g. {$gt:""}) are rejected
+    // – validate severity against the allowed enum
+    // – validate date strings before constructing Date objects
+    const ALLOWED_SEVERITIES = ['low', 'medium', 'high', 'critical'];
+
     const filter = {};
-    if (nodeId) filter.nodeId = nodeId;
-    if (severity) filter.severity = severity;
+
+    if (nodeId) {
+      if (typeof nodeId !== 'string') {
+        return res.status(400).json({ error: 'Invalid nodeId parameter' });
+      }
+      filter.nodeId = nodeId;
+    }
+
+    if (severity) {
+      if (!ALLOWED_SEVERITIES.includes(severity)) {
+        return res.status(400).json({ error: `Invalid severity. Must be one of: ${ALLOWED_SEVERITIES.join(', ')}` });
+      }
+      filter.severity = severity;
+    }
+
     if (from || to) {
       filter.timestamp = {};
-      if (from) filter.timestamp.$gte = new Date(from);
-      if (to)   filter.timestamp.$lte = new Date(to);
+      if (from) {
+        const fromDate = new Date(String(from));
+        if (isNaN(fromDate.getTime())) {
+          return res.status(400).json({ error: 'Invalid "from" date' });
+        }
+        filter.timestamp.$gte = fromDate;
+      }
+      if (to) {
+        const toDate = new Date(String(to));
+        if (isNaN(toDate.getTime())) {
+          return res.status(400).json({ error: 'Invalid "to" date' });
+        }
+        filter.timestamp.$lte = toDate;
+      }
     }
 
     const safeLimit = Math.min(parseInt(limit, 10) || 100, 500);
