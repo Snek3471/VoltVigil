@@ -1,6 +1,7 @@
 const Alert = require('../models/Alert');
+const { sendAlertEmails } = require('../services/emailService');
 
-// POST /api/alerts — ingest a new alert, emit socket event
+// POST /api/alerts — ingest a new alert, emit socket event, trigger emails
 const createAlert = async (req, res) => {
   try {
     const alert = new Alert(req.body);
@@ -9,6 +10,13 @@ const createAlert = async (req, res) => {
     // Emit to all connected Socket.io clients
     const io = req.app.get('io');
     io.emit('new_alert', saved);
+
+    // Send email notifications — never let this crash the pipeline
+    try {
+      await sendAlertEmails(saved);
+    } catch (emailErr) {
+      console.error('[Email] Unexpected error in sendAlertEmails:', emailErr.message);
+    }
 
     res.status(201).json(saved);
   } catch (err) {

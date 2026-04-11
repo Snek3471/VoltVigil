@@ -6,6 +6,7 @@ import MapView from './components/MapView';
 import FFTChart from './components/FFTChart';
 import AlertFeed from './components/AlertFeed';
 import SensorList from './components/SensorList';
+import Notifications from './components/Notifications';
 import useSocket from './hooks/useSocket';
 import { getAlerts } from './services/api';
 
@@ -84,6 +85,9 @@ const App = () => {
       {activeTab === 'sensors' && (
         <SensorList alerts={alerts} liveAlert={latestAlert} />
       )}
+
+      {/* ── Notifications tab ────────────────────────────────────────── */}
+      {activeTab === 'notifications' && <Notifications />}
     </div>
   );
 };

@@ -2,6 +2,7 @@ const TABS = [
   { id: 'home', label: 'Home' },
   { id: 'map', label: 'Map' },
   { id: 'sensors', label: 'Sensors' },
+  { id: 'notifications', label: 'Notifications' },
 ];
 
 const TabNav = ({ activeTab, onTabChange }) => (

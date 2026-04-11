@@ -7,6 +7,8 @@ const mongoose = require('mongoose');
 const os = require('os');
 
 const alertRoutes = require('./routes/alerts');
+const subscriberRoutes = require('./routes/subscribers');
+const notificationRoutes = require('./routes/notifications');
 
 // ---------------------------------------------------------------------------
 // Network utility — finds the first non-loopback IPv4 address
@@ -44,7 +46,7 @@ app.set('io', io);
 // ---------------------------------------------------------------------------
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'DELETE'],
+  methods: ['GET', 'POST', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type'],
 }));
 app.use(express.json());
@@ -64,6 +66,8 @@ app.get('/health', (_req, res) => {
 // Routes
 // ---------------------------------------------------------------------------
 app.use('/api/alerts', alertRoutes);
+app.use('/api/subscribers', subscriberRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ---------------------------------------------------------------------------
 // Socket.io connection handling
