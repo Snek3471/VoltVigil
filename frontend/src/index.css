@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Leaflet map needs explicit height */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #1e293b;
+}
+
+/* Custom scrollbar for alert feed */
+.alert-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.alert-scroll::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+.alert-scroll::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+.alert-scroll::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Recharts tooltip dark theme */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
