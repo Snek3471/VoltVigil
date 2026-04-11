@@ -54,56 +54,64 @@ router.get('/', async (req, res) => {
   try {
     const { nodeId, severity, from, to, limit = 100, skip = 0 } = req.query;
 
-    // Sanitize inputs to prevent NoSQL injection:
-    // – cast string fields to String so object payloads (e.g. {$gt:""}) are rejected
-    // – validate severity against the allowed enum
-    // – validate date strings before constructing Date objects
+    // Validate and sanitize inputs to prevent NoSQL injection.
+    // Use Mongoose query builder (.where().equals()) with explicit scalar coercion
+    // so no user-supplied object can inject MongoDB query operators.
     const ALLOWED_SEVERITIES = ['low', 'medium', 'high', 'critical'];
 
-    const filter = {};
-
-    if (nodeId) {
-      if (typeof nodeId !== 'string') {
-        return res.status(400).json({ error: 'Invalid nodeId parameter' });
-      }
-      filter.nodeId = nodeId;
+    // nodeId must be a plain string (Express may parse nested params as objects)
+    if (nodeId !== undefined && typeof nodeId !== 'string') {
+      return res.status(400).json({ error: 'Invalid nodeId parameter' });
     }
 
-    if (severity) {
-      if (!ALLOWED_SEVERITIES.includes(severity)) {
-        return res.status(400).json({ error: `Invalid severity. Must be one of: ${ALLOWED_SEVERITIES.join(', ')}` });
-      }
-      filter.severity = severity;
+    // severity must be one of the known enum values
+    if (severity !== undefined && !ALLOWED_SEVERITIES.includes(severity)) {
+      return res.status(400).json({ error: `Invalid severity. Must be one of: ${ALLOWED_SEVERITIES.join(', ')}` });
     }
 
-    if (from || to) {
-      filter.timestamp = {};
-      if (from) {
-        const fromDate = new Date(String(from));
-        if (isNaN(fromDate.getTime())) {
-          return res.status(400).json({ error: 'Invalid "from" date' });
-        }
-        filter.timestamp.$gte = fromDate;
+    // Validate date strings before use
+    let fromDate, toDate;
+    if (from !== undefined) {
+      fromDate = new Date(String(from));
+      if (isNaN(fromDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid "from" date' });
       }
-      if (to) {
-        const toDate = new Date(String(to));
-        if (isNaN(toDate.getTime())) {
-          return res.status(400).json({ error: 'Invalid "to" date' });
-        }
-        filter.timestamp.$lte = toDate;
+    }
+    if (to !== undefined) {
+      toDate = new Date(String(to));
+      if (isNaN(toDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid "to" date' });
       }
     }
 
     const safeLimit = Math.min(parseInt(limit, 10) || 100, 500);
     const safeSkip  = parseInt(skip, 10) || 0;
 
+    // Build query using the Mongoose query builder API to avoid raw filter objects
+    // carrying user input. .equals() enforces scalar equality, preventing operator injection.
+    let findQuery  = Alert.find();
+    let countQuery = Alert.countDocuments();
+
+    if (nodeId) {
+      findQuery  = findQuery.where('nodeId').equals(String(nodeId));
+      countQuery = countQuery.where('nodeId').equals(String(nodeId));
+    }
+    if (severity) {
+      findQuery  = findQuery.where('severity').equals(severity);
+      countQuery = countQuery.where('severity').equals(severity);
+    }
+    if (fromDate) {
+      findQuery  = findQuery.where('timestamp').gte(fromDate);
+      countQuery = countQuery.where('timestamp').gte(fromDate);
+    }
+    if (toDate) {
+      findQuery  = findQuery.where('timestamp').lte(toDate);
+      countQuery = countQuery.where('timestamp').lte(toDate);
+    }
+
     const [alerts, total] = await Promise.all([
-      Alert.find(filter)
-           .sort({ timestamp: -1 })
-           .skip(safeSkip)
-           .limit(safeLimit)
-           .lean(),
-      Alert.countDocuments(filter),
+      findQuery.sort({ timestamp: -1 }).skip(safeSkip).limit(safeLimit).lean(),
+      countQuery,
     ]);
 
     return res.json({ total, limit: safeLimit, skip: safeSkip, data: alerts });
