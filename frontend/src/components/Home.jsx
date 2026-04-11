@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { simulatedNodes } from '../data/simulatedNodes';
 
 // ---------------------------------------------------------------------------
 // Small presentational sub-components
@@ -34,9 +33,7 @@ const StatCard = ({ label, value, accent }) => (
 
 const Home = ({ alerts, isConnected }) => {
   const totalSensors = useMemo(() => {
-    const ids = new Set(simulatedNodes.map((n) => n.nodeId));
-    alerts.forEach((a) => ids.add(a.nodeId));
-    return ids.size;
+    return new Set(alerts.map((a) => a.nodeId)).size;
   }, [alerts]);
 
   return (

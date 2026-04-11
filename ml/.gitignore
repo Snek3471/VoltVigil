@@ -1,0 +1,10 @@
+model.pkl
+scaler.pkl
+training_data.csv
+model_meta.json
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+.env

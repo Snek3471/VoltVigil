@@ -11,8 +11,6 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
-import { simulatedNodes } from '../data/simulatedNodes';
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -86,8 +84,8 @@ const combineRisk = (freqRisk, regionalRisk) => {
   return Object.keys(SEVERITY_ORDER).find((k) => SEVERITY_ORDER[k] === maxLevel) || 'low';
 };
 
-const getHealthStatus = ({ timestamp, isSimulated }) => {
-  if (isSimulated || !timestamp) return { dot: 'yellow', label: 'Simulated', emoji: '🟡' };
+const getHealthStatus = ({ timestamp }) => {
+  if (!timestamp) return { dot: 'gray', label: 'No Data', emoji: '⚫' };
   const ageSec = (Date.now() - new Date(timestamp).getTime()) / 1000;
   if (ageSec < 60) return { dot: 'green', label: 'Healthy', emoji: '🟢' };
   if (ageSec < 300) return { dot: 'yellow', label: 'Degraded', emoji: '🟡' };
@@ -265,6 +263,91 @@ const RiskZoneMap = ({ node, severity }) => {
 };
 
 // ---------------------------------------------------------------------------
+// MLPredictionPanel
+// ---------------------------------------------------------------------------
+
+const BREAKDOWN_LABEL = {
+  frequencyRisk: 'Frequency Risk',
+  regionRisk:    'Region Risk',
+  behaviorRisk:  'Behavior Risk',
+};
+
+const MLPredictionPanel = ({ mlConfidence, mlFeatureBreakdown, severitySource, severity }) => {
+  const isML      = severitySource === 'ml';
+  const hasData   = mlConfidence !== null && mlConfidence !== undefined;
+  const barColor  = SEVERITY_COLOR[severity] || SEVERITY_COLOR.unknown;
+  const confidencePct = hasData ? Math.round(mlConfidence * 100) : 0;
+
+  return (
+    <div className="bg-[#0f172a] border border-[#334155] rounded-lg p-4 space-y-3">
+      <SectionHeading>🤖 ML Severity Prediction</SectionHeading>
+
+      {!hasData ? (
+        <p className="text-slate-500 text-sm">
+          ML service offline — alert severity determined by threshold rules.
+        </p>
+      ) : (
+        <>
+          {/* Predicted severity + source badge */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-slate-400 text-sm">Predicted</span>
+            <div className="flex items-center gap-2">
+              <SeverityBadge severity={severity} />
+              {!isML && (
+                <span className="text-xs text-slate-400 bg-slate-700/60 border border-slate-600/40 px-2 py-0.5 rounded-full">
+                  Rule Based
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Confidence bar */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-400">Confidence</span>
+              <span className="text-slate-200 font-medium tabular-nums">{confidencePct}%</span>
+            </div>
+            <div className="w-full bg-[#334155] rounded-full h-2 overflow-hidden">
+              <div
+                className="h-2 rounded-full transition-all duration-500"
+                style={{ width: `${confidencePct}%`, backgroundColor: barColor }}
+              />
+            </div>
+          </div>
+
+          {/* Source */}
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-400">Source</span>
+            <span className={isML ? 'text-green-400 font-medium' : 'text-slate-400'}>
+              {isML ? 'ML Model' : 'Threshold Rules'}
+            </span>
+          </div>
+
+          {/* Feature breakdown */}
+          {mlFeatureBreakdown && (
+            <div className="pt-2 border-t border-[#334155] space-y-1.5">
+              <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
+                Feature Breakdown
+              </p>
+              {Object.entries(mlFeatureBreakdown).map(([key, value]) => (
+                <div key={key} className="flex justify-between text-sm">
+                  <span className="text-slate-400">{BREAKDOWN_LABEL[key] || key}</span>
+                  <span className="text-slate-200 capitalize">{value}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="text-xs italic text-slate-600 leading-relaxed pt-1">
+            ⚠️ Model trained on simulated data. Accuracy improves post-deployment.
+          </p>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // ThreatAssessment
 // ---------------------------------------------------------------------------
 
@@ -315,7 +398,7 @@ const ThreatAssessment = ({ freqRisk, regionalRisk, overallThreat }) => (
 
 const DOT_COLOR = { green: 'bg-green-500', yellow: 'bg-yellow-400', red: 'bg-red-500' };
 
-const HealthPanel = ({ healthStatus, totalAlerts, timestamp, isSimulated }) => (
+const HealthPanel = ({ healthStatus, totalAlerts, timestamp }) => (
   <div className="bg-[#0f172a] border border-[#334155] rounded-lg p-4 space-y-3">
     <SectionHeading>Sensor Health</SectionHeading>
 
@@ -336,9 +419,7 @@ const HealthPanel = ({ healthStatus, totalAlerts, timestamp, isSimulated }) => (
       <div className="flex justify-between gap-4">
         <span className="text-slate-400">Uptime estimate</span>
         <span className="text-slate-200 text-xs text-right">
-          {isSimulated
-            ? 'Simulated node'
-            : totalAlerts >= 10
+          {totalAlerts >= 10
             ? 'Stable transmission history'
             : 'Insufficient data for uptime estimate'}
         </span>
@@ -359,17 +440,21 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
       (!node.timestamp || new Date(liveAlert.timestamp) >= new Date(node.timestamp))
     ) {
       return {
-        severity: liveAlert.severity,
-        peakFrequency: liveAlert.peakFrequency,
-        timestamp: liveAlert.timestamp,
-        isSimulated: false,
+        severity:           liveAlert.severity,
+        peakFrequency:      liveAlert.peakFrequency,
+        timestamp:          liveAlert.timestamp,
+        mlConfidence:       liveAlert.mlConfidence       ?? null,
+        mlFeatureBreakdown: liveAlert.mlFeatureBreakdown ?? null,
+        severitySource:     liveAlert.severitySource     ?? 'threshold',
       };
     }
     return {
-      severity: node.severity,
-      peakFrequency: node.peakFrequency,
-      timestamp: node.timestamp,
-      isSimulated: node.isSimulated,
+      severity:           node.severity,
+      peakFrequency:      node.peakFrequency,
+      timestamp:          node.timestamp,
+      mlConfidence:       node.mlConfidence       ?? null,
+      mlFeatureBreakdown: node.mlFeatureBreakdown ?? null,
+      severitySource:     node.severitySource     ?? 'threshold',
     };
   }, [node, liveAlert]);
 
@@ -383,9 +468,7 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
       .slice(-20);
 
-    if (sorted.length === 0) {
-      return [{ time: 'Simulated', frequency: node.peakFrequency }];
-    }
+    if (sorted.length === 0) return [];
     return sorted.map((a) => ({
       time: new Date(a.timestamp).toLocaleTimeString([], {
         hour: '2-digit',
@@ -464,7 +547,15 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
             </p>
           </div>
 
-          {/* Sections 3 & 4 side by side */}
+          {/* Section 3: ML Prediction */}
+          <MLPredictionPanel
+            mlConfidence={current.mlConfidence}
+            mlFeatureBreakdown={current.mlFeatureBreakdown}
+            severitySource={current.severitySource}
+            severity={current.severity}
+          />
+
+          {/* Sections 4 & 5 side by side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ThreatAssessment
               freqRisk={freqRisk}
@@ -475,7 +566,6 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
               healthStatus={healthStatus}
               totalAlerts={totalAlerts}
               timestamp={current.timestamp}
-              isSimulated={current.isSimulated}
             />
           </div>
 
@@ -492,7 +582,7 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
 const SensorList = ({ alerts, liveAlert }) => {
   const [expandedId, setExpandedId] = useState(null);
 
-  // Build merged node list: simulated as base, real data overrides by nodeId
+  // Build node list from real alert data only — one entry per unique nodeId
   const nodes = useMemo(() => {
     const latestByNode = {};
     alerts.forEach((alert) => {
@@ -503,24 +593,17 @@ const SensorList = ({ alerts, liveAlert }) => {
         latestByNode[alert.nodeId] = alert;
       }
     });
-
-    const nodeMap = {};
-    simulatedNodes.forEach((n) => {
-      nodeMap[n.nodeId] = { ...n, timestamp: null, isSimulated: true };
-    });
-    Object.values(latestByNode).forEach((alert) => {
-      nodeMap[alert.nodeId] = {
-        nodeId: alert.nodeId,
-        lat: alert.lat,
-        lng: alert.lng,
-        severity: alert.severity,
-        peakFrequency: alert.peakFrequency,
-        timestamp: alert.timestamp,
-        isSimulated: false,
-      };
-    });
-
-    return Object.values(nodeMap);
+    return Object.values(latestByNode).map((alert) => ({
+      nodeId:             alert.nodeId,
+      lat:                alert.lat,
+      lng:                alert.lng,
+      severity:           alert.severity,
+      peakFrequency:      alert.peakFrequency,
+      timestamp:          alert.timestamp,
+      mlConfidence:       alert.mlConfidence       ?? null,
+      mlFeatureBreakdown: alert.mlFeatureBreakdown ?? null,
+      severitySource:     alert.severitySource     ?? 'threshold',
+    }));
   }, [alerts]);
 
   // Per-node alert history for graphs
@@ -545,20 +628,30 @@ const SensorList = ({ alerts, liveAlert }) => {
           <span className="text-xs text-slate-500">{nodes.length} nodes registered</span>
         </div>
 
-        {nodes.map((node) => {
-          const relevantLiveAlert =
-            liveAlert?.nodeId === node.nodeId ? liveAlert : null;
-          return (
-            <SensorCard
-              key={node.nodeId}
-              node={node}
-              nodeAlerts={alertsByNode[node.nodeId] || []}
-              liveAlert={relevantLiveAlert}
-              isExpanded={expandedId === node.nodeId}
-              onToggle={() => toggleExpand(node.nodeId)}
-            />
-          );
-        })}
+        {nodes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="text-4xl mb-4">📡</div>
+            <p className="text-slate-300 font-medium">No sensor data received yet</p>
+            <p className="text-slate-500 text-sm mt-1">
+              Waiting for hardware nodes to come online and POST alerts.
+            </p>
+          </div>
+        ) : (
+          nodes.map((node) => {
+            const relevantLiveAlert =
+              liveAlert?.nodeId === node.nodeId ? liveAlert : null;
+            return (
+              <SensorCard
+                key={node.nodeId}
+                node={node}
+                nodeAlerts={alertsByNode[node.nodeId] || []}
+                liveAlert={relevantLiveAlert}
+                isExpanded={expandedId === node.nodeId}
+                onToggle={() => toggleExpand(node.nodeId)}
+              />
+            );
+          })
+        )}
 
       </div>
     </div>

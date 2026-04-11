@@ -8,8 +8,6 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-import { simulatedNodes } from '../data/simulatedNodes';
-
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -109,31 +107,11 @@ const BoundsUpdater = ({ nodes }) => {
 
 const MapView = ({ alerts, liveAlert }) => {
   // nodeMap: nodeId -> { nodeId, lat, lng, severity, peakFrequency, timestamp }
-  // Initialized from fetched alerts; falls back to simulated nodes when empty.
-  const [nodeMap, setNodeMap] = useState(() => {
-    const fromAlerts = buildNodeMap([]);
-    if (Object.keys(fromAlerts).length > 0) return fromAlerts;
-    // seed with simulated nodes
-    const sim = {};
-    simulatedNodes.forEach((n) => {
-      sim[n.nodeId] = { ...n, timestamp: new Date().toISOString() };
-    });
-    return sim;
-  });
+  const [nodeMap, setNodeMap] = useState({});
 
-  // Sync when the full alerts array arrives / changes
+  // Rebuild from the full alerts array whenever it changes
   useEffect(() => {
-    if (!alerts || alerts.length === 0) return;
-    const realMap = buildNodeMap(alerts);
-    setNodeMap((prev) => {
-      // Merge: real data overrides simulated nodes for the same nodeId,
-      // simulated nodes that have no real counterpart are kept.
-      const merged = { ...prev };
-      Object.entries(realMap).forEach(([id, node]) => {
-        merged[id] = node;
-      });
-      return merged;
-    });
+    setNodeMap(buildNodeMap(alerts));
   }, [alerts]);
 
   // Apply a single live alert without waiting for a full re-fetch
