@@ -1,0 +1,12 @@
+# CODEOWNERS
+# Automatically request reviews from the right team members.
+# Format: <path pattern>  <GitHub username(s)>
+# Replace the usernames below with actual GitHub handles.
+
+# Person 1 owns frontend and backend
+/frontend/  @person1
+/backend/   @person1
+
+# Persons 2 & 3 own firmware and hardware
+/firmware/  @person2 @person3
+/hardware/  @person2 @person3

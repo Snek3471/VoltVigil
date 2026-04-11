@@ -1,0 +1,51 @@
+/* ============================================================
+   VoltVigil – Global styles (dark monitoring dashboard theme)
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-base:    #0d1117;
+  --bg-panel:   #161b22;
+  --bg-card:    #1c2333;
+  --border:     #30363d;
+  --text:       #c9d1d9;
+  --text-muted: #8b949e;
+  --text-head:  #f0f6fc;
+
+  --sev-low:      #3fb950;
+  --sev-medium:   #d29922;
+  --sev-high:     #f85149;
+  --sev-critical: #ff7b72;
+
+  --accent: #58a6ff;
+
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg-base);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  color: var(--text-head);
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Leaflet fix for dark theme – keep tile images visible */
+.leaflet-tile {
+  filter: brightness(0.7) saturate(0.8);
+}
