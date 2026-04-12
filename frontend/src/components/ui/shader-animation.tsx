@@ -31,7 +31,7 @@ export function ShaderAnimation() {
 
       void main(void) {
         vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
-        float t = time * 0.04;
+        float t = time * 0.018;
         float lineWidth = 0.003;
         vec3 color = vec3(0.0);
 
@@ -99,12 +99,23 @@ export function ShaderAnimation() {
     onWindowResize()
     window.addEventListener("resize", onWindowResize, false)
 
+    let startTime: number | null = null
+    const DURATION = 4000 // ms — animation plays once then freezes
+
     const animate = () => {
-      const animationId = requestAnimationFrame(animate)
-      uniforms.time.value += 0.07
-      renderer.render(scene, camera)
-      if (sceneRef.current) {
-        sceneRef.current.animationId = animationId
+      if (startTime === null) startTime = performance.now()
+      const elapsed = performance.now() - startTime
+
+      if (elapsed < DURATION) {
+        uniforms.time.value += 0.025
+        renderer.render(scene, camera)
+        const animationId = requestAnimationFrame(animate)
+        if (sceneRef.current) {
+          sceneRef.current.animationId = animationId
+        }
+      } else {
+        // Final render — freeze on last frame
+        renderer.render(scene, camera)
       }
     }
 

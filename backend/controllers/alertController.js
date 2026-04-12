@@ -1,105 +1,111 @@
 const Alert = require('../models/Alert');
 const { sendAlertEmails } = require('../services/emailService');
 
-async function persistAlertPipeline(req, alertDoc) {
-  const saved = await alertDoc.save();
-  const io = req.app.get('io');
-  if (io) io.emit('new_alert', saved);
-  try {
-    await sendAlertEmails(saved);
-  } catch (emailErr) {
-    console.error('[Email] Unexpected error in sendAlertEmails:', emailErr.message);
+// Cooldown tracker
+const lastAlertSent = {};
+
+// Derive severity from features using threshold rules
+function deriveSeverity(features, peakFrequency) {
+  if (!features) {
+    if (peakFrequency > 1500) return 'critical';
+    if (peakFrequency > 1000) return 'high';
+    if (peakFrequency > 500)  return 'medium';
+    return 'low';
   }
-  return saved;
+  const { avg_band_80_140 = 0, avg_band_170_230 = 0, avg_band_270_330 = 0, avg_hiss_800_4000 = 0 } = features;
+  const coronaScore = (avg_band_80_140 + avg_band_170_230 + avg_band_270_330) * 3 + avg_hiss_800_4000;
+  if (coronaScore > 0.15)  return 'critical';
+  if (coronaScore > 0.08)  return 'high';
+  if (coronaScore > 0.03)  return 'medium';
+  return 'low';
 }
 
-// POST /api/alerts — ingest a new alert, emit socket event, trigger emails
-const createAlert = async (req, res) => {
+exports.createAlert = async (req, res) => {
   try {
-    const saved = await persistAlertPipeline(req, new Alert(req.body));
-    res.status(201).json(saved);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
+    const { lat, lng, nodeId = 'sensor-01', features, peakFrequency = 0 } = req.body;
 
-// POST /api/alerts/simulate — create fake alerts for UI / socket testing (dev)
-const simulateAlerts = async (req, res) => {
-  try {
-    const raw = parseInt(String(req.query.count ?? '8'), 10);
-    const count = Number.isFinite(raw) ? Math.min(Math.max(raw, 1), 25) : 8;
-
-    const severities = ['low', 'medium', 'high', 'critical'];
-    const anchors = [
-      { nodeId: 'SIM-NYC', lat: 40.7128, lng: -74.006 },
-      { nodeId: 'SIM-CHI', lat: 41.8781, lng: -87.6298 },
-      { nodeId: 'SIM-HOU', lat: 29.7604, lng: -95.3698 },
-      { nodeId: 'SIM-LAX', lat: 34.0522, lng: -118.2437 },
-      { nodeId: 'SIM-ATL', lat: 33.749, lng: -84.388 },
-      { nodeId: 'SIM-SEA', lat: 47.6062, lng: -122.3321 },
-    ];
-
-    const jitter = () => (Math.random() - 0.5) * 0.28;
-    const created = [];
-
-    for (let i = 0; i < count; i++) {
-      const a = anchors[i % anchors.length];
-      const alert = new Alert({
-        nodeId: a.nodeId,
-        lat: a.lat + jitter(),
-        lng: a.lng + jitter(),
-        peakFrequency: Math.round(700 + Math.random() * 1800),
-        severity: severities[Math.floor(Math.random() * severities.length)],
+    // Try ML service first
+    let mlData = null;
+    try {
+      const mlResponse = await fetch('http://localhost:5001/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ features }),
+        signal: AbortSignal.timeout(2000)
       });
-      created.push(await persistAlertPipeline(req, alert));
+      if (mlResponse.ok) mlData = await mlResponse.json();
+    } catch (e) {
+      console.log('[ML] Service offline, using threshold fallback');
     }
 
-    console.log(`[Simulate] Created ${created.length} fake alert(s)`);
-    res.status(201).json({
-      message: 'Simulated alerts created',
-      count: created.length,
-      alerts: created,
+    const severity = mlData?.severity || deriveSeverity(features, peakFrequency);
+    const dominantFreq = peakFrequency || (features ? Math.round((features.avg_band_80_140 || 0) * 10000) : 0);
+
+    const alert = new Alert({
+      nodeId,
+      lat,
+      lng,
+      peakFrequency: dominantFreq,
+      severity,
+      features,
+      mlSeverity:     mlData?.severity || null,
+      mlConfidence:   mlData?.confidence || null,
+      mlCoronaProb:   mlData?.coronaProbability ?? null,
+      mlRiskLevel:    mlData?.riskLevel || null,
+      severitySource: mlData ? 'ml' : 'threshold',
     });
+
+    const saved = await alert.save();
+
+    // Emit to dashboard
+    req.io.emit('new_alert', saved);
+
+    // Send email alerts (with cooldown)
+    try {
+      const now = Date.now();
+      const last = lastAlertSent[nodeId] || 0;
+      if (now - last > 5 * 60 * 1000 && ['high','critical'].includes(severity)) {
+        lastAlertSent[nodeId] = now;
+        await sendAlertEmails(saved);
+      }
+    } catch (e) {
+      console.error('[Email] Failed:', e.message);
+    }
+
+    res.status(201).json(saved);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('[Alert] Error:', err);
+    res.status(500).json({ error: err.message });
   }
 };
 
-// GET /api/alerts — retrieve all alerts, sorted newest first
-// Optional query params: severity, nodeId
-const getAlerts = async (req, res) => {
+exports.getAlerts = async (req, res) => {
   try {
     const filter = {};
     if (req.query.severity) filter.severity = req.query.severity;
     if (req.query.nodeId) filter.nodeId = req.query.nodeId;
-
-    const alerts = await Alert.find(filter).sort({ timestamp: -1 });
+    const alerts = await Alert.find(filter).sort({ timestamp: -1 }).limit(500);
     res.json(alerts);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// GET /api/alerts/:id — retrieve single alert by ID
-const getAlertById = async (req, res) => {
+exports.getAlert = async (req, res) => {
   try {
     const alert = await Alert.findById(req.params.id);
-    if (!alert) return res.status(404).json({ error: 'Alert not found' });
+    if (!alert) return res.status(404).json({ error: 'Not found' });
     res.json(alert);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// DELETE /api/alerts/:id — delete alert by ID
-const deleteAlert = async (req, res) => {
+exports.deleteAlert = async (req, res) => {
   try {
-    const alert = await Alert.findByIdAndDelete(req.params.id);
-    if (!alert) return res.status(404).json({ error: 'Alert not found' });
-    res.json({ message: 'Alert deleted', id: req.params.id });
+    await Alert.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
-module.exports = { createAlert, simulateAlerts, getAlerts, getAlertById, deleteAlert };

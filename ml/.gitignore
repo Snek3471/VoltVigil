@@ -1,0 +1,4 @@
+corona_rf_model.pkl
+training_data.csv
+__pycache__/
+*.pyc
