@@ -57,7 +57,7 @@ app.use(express.json());
 app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
-    message: 'VoltVigil backend is running',
+    message: 'TeleGrid backend is running',
     timestamp: new Date().toISOString(),
   });
 });
@@ -77,7 +77,7 @@ io.on('connection', (socket) => {
 
   socket.emit('connection_status', {
     connected: true,
-    message: 'Connected to VoltVigil server',
+    message: 'Connected to TeleGrid server',
     socketId: socket.id,
   });
 
@@ -90,7 +90,7 @@ io.on('connection', (socket) => {
 // Connect to MongoDB then start server on all interfaces (0.0.0.0)
 // ---------------------------------------------------------------------------
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/voltvigil';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/telegrid';
 
 mongoose
   .connect(MONGO_URI)
@@ -98,7 +98,7 @@ mongoose
     console.log('[MongoDB] Connected successfully');
     server.listen(PORT, '0.0.0.0', () => {
       const localIP = getLocalIP();
-      console.log(`[Server] VoltVigil backend running on port ${PORT}`);
+      console.log(`[Server] TeleGrid backend running on port ${PORT}`);
       console.log(`         Local:   http://localhost:${PORT}`);
       console.log(`         Network: http://${localIP}:${PORT}`);
       console.log(`[ESP32]  POST alerts to: http://${localIP}:${PORT}/api/alerts`);

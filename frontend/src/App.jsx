@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import StatusBar from './components/StatusBar';
 import TabNav from './components/TabNav';
 import Home from './components/Home';
+import About from './components/About';
 import MapView from './components/MapView';
 import FFTChart from './components/FFTChart';
 import AlertFeed from './components/AlertFeed';
@@ -48,20 +48,31 @@ const App = () => {
     });
   }, [latestAlert]);
 
+  const tabNavProps = {
+    activeTab,
+    onTabChange: setActiveTab,
+    alertCount: alerts.length,
+    isConnected,
+  };
+
+  // ── Home tab: TabNav floats as an absolute overlay over the full-screen shader
+  if (activeTab === 'home') {
+    return (
+      <div className="relative h-screen overflow-hidden bg-black text-white">
+        <TabNav {...tabNavProps} overlay={true} />
+        <Home onTabChange={setActiveTab} />
+      </div>
+    );
+  }
+
+  // ── All other tabs: TabNav sits as a solid header, content below
   return (
     <div className="h-screen bg-[#0f172a] text-white flex flex-col overflow-hidden">
-      <StatusBar isConnected={isConnected} alertCount={alerts.length} />
-      <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {/* ── Home tab ─────────────────────────────────────────────────── */}
-      {activeTab === 'home' && (
-        <Home alerts={alerts} isConnected={isConnected} />
-      )}
+      <TabNav {...tabNavProps} overlay={false} />
 
       {/* ── Map tab ──────────────────────────────────────────────────── */}
       {activeTab === 'map' && (
         <main className="flex-1 p-4 grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4 overflow-hidden">
-          {/* Left column: Map + FFT Chart */}
           <div className="flex flex-col gap-4 min-h-0">
             <div style={{ height: '55%', minHeight: '300px' }}>
               <MapView alerts={alerts} liveAlert={latestAlert} />
@@ -73,8 +84,6 @@ const App = () => {
               <FFTChart alerts={alerts} />
             </div>
           </div>
-
-          {/* Right column: Alert Feed */}
           <div className="bg-[#1e293b] border border-[#334155] rounded-lg p-4 flex flex-col overflow-hidden">
             <AlertFeed alerts={alerts} loading={loading} error={error} />
           </div>
@@ -88,6 +97,11 @@ const App = () => {
 
       {/* ── Notifications tab ────────────────────────────────────────── */}
       {activeTab === 'notifications' && <Notifications />}
+
+      {/* ── About tab ────────────────────────────────────────────────── */}
+      {activeTab === 'about' && (
+        <About alerts={alerts} isConnected={isConnected} />
+      )}
     </div>
   );
 };

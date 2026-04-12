@@ -26,11 +26,11 @@ const SEVERITY_COLOR = {
 const SEVERITY_ORDER = { low: 0, medium: 1, high: 2, critical: 3 };
 
 const SEVERITY_BADGE = {
-  critical: 'bg-red-500/20 text-red-400 border border-red-500/30',
-  high: 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
-  medium: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
-  low: 'bg-green-500/20 text-green-400 border border-green-500/30',
-  unknown: 'bg-slate-500/20 text-slate-400 border border-slate-500/30',
+  critical: 'bg-red-500/15 text-red-400 border border-red-500/40 shadow-[0_0_8px_rgba(239,68,68,0.12)]',
+  high: 'bg-orange-500/15 text-orange-400 border border-orange-500/40',
+  medium: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/40',
+  low: 'bg-green-500/15 text-green-400 border border-green-500/40',
+  unknown: 'bg-slate-500/15 text-slate-400 border border-slate-500/30',
 };
 
 // Leaflet Circle radius in meters
@@ -108,7 +108,7 @@ const formatTs = (ts) => {
 
 const SeverityBadge = ({ severity }) => (
   <span
-    className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
+    className={`text-[11px] font-bold px-2.5 py-0.5 rounded capitalize tracking-wider ${
       SEVERITY_BADGE[severity] || SEVERITY_BADGE.unknown
     }`}
   >
@@ -118,7 +118,7 @@ const SeverityBadge = ({ severity }) => (
 
 const ChevronIcon = ({ isExpanded }) => (
   <svg
-    className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
+    className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-transform duration-200 ${
       isExpanded ? 'rotate-180' : ''
     }`}
     fill="none"
@@ -131,7 +131,8 @@ const ChevronIcon = ({ isExpanded }) => (
 );
 
 const SectionHeading = ({ children }) => (
-  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+    <span className="w-1 h-3 bg-slate-600 rounded-full inline-block" />
     {children}
   </h4>
 );
@@ -156,10 +157,10 @@ const MapResizer = () => {
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1e293b] border border-[#334155] rounded px-3 py-2 text-xs text-slate-200">
-      <p className="text-slate-400">{label}</p>
-      <p className="font-semibold" style={{ color: '#eab308' }}>
-        {payload[0].value?.toFixed(1)} Hz
+    <div className="bg-[#1e293b] border border-[#334155] rounded-lg px-3 py-2 text-xs shadow-xl">
+      <p className="text-slate-500 mb-1">{label}</p>
+      <p className="font-bold tabular-nums" style={{ color: '#eab308' }}>
+        {payload[0].value?.toFixed(1)} <span className="font-normal text-slate-400">Hz</span>
       </p>
     </div>
   );
@@ -171,32 +172,36 @@ const FrequencyGraph = ({ data, severity }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data} margin={{ top: 8, right: 16, left: 8, bottom: 28 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+        <CartesianGrid strokeDasharray="3 4" stroke="#1e3250" vertical={false} />
         <XAxis
           dataKey="time"
-          stroke="#64748b"
-          tick={{ fill: '#94a3b8', fontSize: 9 }}
-          label={{ value: 'Time', position: 'insideBottom', offset: -18, fill: '#94a3b8', fontSize: 10 }}
+          stroke="#1e3250"
+          tick={{ fill: '#475569', fontSize: 9 }}
+          tickLine={false}
+          axisLine={{ stroke: '#1e3250' }}
+          label={{ value: 'Time', position: 'insideBottom', offset: -18, fill: '#475569', fontSize: 10 }}
           interval="preserveStartEnd"
         />
         <YAxis
-          stroke="#64748b"
-          tick={{ fill: '#94a3b8', fontSize: 9 }}
+          stroke="#1e3250"
+          tick={{ fill: '#475569', fontSize: 9 }}
+          tickLine={false}
+          axisLine={{ stroke: '#1e3250' }}
           domain={[0, 2500]}
-          label={{ value: 'Frequency (Hz)', angle: -90, position: 'insideLeft', offset: 12, fill: '#94a3b8', fontSize: 10 }}
+          label={{ value: 'Frequency (Hz)', angle: -90, position: 'insideLeft', offset: 12, fill: '#475569', fontSize: 10 }}
         />
-        <Tooltip content={<ChartTooltip />} />
-        <ReferenceLine y={500}  stroke="#22c55e" strokeDasharray="4 3" label={{ value: 'Low',      position: 'insideTopRight', fill: '#22c55e', fontSize: 9 }} />
-        <ReferenceLine y={1000} stroke="#eab308" strokeDasharray="4 3" label={{ value: 'Medium',   position: 'insideTopRight', fill: '#eab308', fontSize: 9 }} />
-        <ReferenceLine y={1500} stroke="#f97316" strokeDasharray="4 3" label={{ value: 'High',     position: 'insideTopRight', fill: '#f97316', fontSize: 9 }} />
-        <ReferenceLine y={2000} stroke="#ef4444" strokeDasharray="4 3" label={{ value: 'Critical', position: 'insideTopRight', fill: '#ef4444', fontSize: 9 }} />
+        <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#334155', strokeWidth: 1 }} />
+        <ReferenceLine y={500}  stroke="#22c55e" strokeDasharray="4 3" strokeWidth={1} label={{ value: 'Low',      position: 'insideTopRight', fill: '#22c55e', fontSize: 8 }} />
+        <ReferenceLine y={1000} stroke="#eab308" strokeDasharray="4 3" strokeWidth={1} label={{ value: 'Medium',   position: 'insideTopRight', fill: '#eab308', fontSize: 8 }} />
+        <ReferenceLine y={1500} stroke="#f97316" strokeDasharray="4 3" strokeWidth={1} label={{ value: 'High',     position: 'insideTopRight', fill: '#f97316', fontSize: 8 }} />
+        <ReferenceLine y={2000} stroke="#ef4444" strokeDasharray="4 3" strokeWidth={1} label={{ value: 'Critical', position: 'insideTopRight', fill: '#ef4444', fontSize: 8 }} />
         <Line
           type="monotone"
           dataKey="frequency"
           stroke={lineColor}
           strokeWidth={2}
           dot={{ r: 3, fill: lineColor, strokeWidth: 0 }}
-          activeDot={{ r: 5 }}
+          activeDot={{ r: 5, strokeWidth: 0 }}
           isAnimationActive={false}
           name="Peak Freq (Hz)"
         />
@@ -267,33 +272,33 @@ const RiskZoneMap = ({ node, severity }) => {
 // ---------------------------------------------------------------------------
 
 const THREAT_BADGE = {
-  critical: 'bg-red-500/20 text-red-300 border border-red-500/40',
-  high: 'bg-orange-500/20 text-orange-300 border border-orange-500/40',
-  medium: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40',
-  low: 'bg-green-500/20 text-green-300 border border-green-500/40',
+  critical: 'bg-red-500/15 text-red-300 border border-red-500/40',
+  high: 'bg-orange-500/15 text-orange-300 border border-orange-500/40',
+  medium: 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/40',
+  low: 'bg-green-500/15 text-green-300 border border-green-500/40',
 };
 
 const ThreatAssessment = ({ freqRisk, regionalRisk, overallThreat }) => (
-  <div className="bg-[#0f172a] border border-[#334155] rounded-lg p-4 space-y-3">
+  <div className="bg-[#0f172a] border border-[#2d3f55] rounded-lg p-4 space-y-3">
     <SectionHeading>Threat Assessment</SectionHeading>
 
-    <div className="space-y-2 text-sm">
-      <div className="flex items-start justify-between gap-2">
+    <div className="space-y-2.5 text-sm">
+      <div className="flex items-center justify-between gap-2">
         <span className="text-slate-400">Frequency Risk</span>
         <SeverityBadge severity={freqRisk.level} />
       </div>
       <div className="flex items-start justify-between gap-2">
         <span className="text-slate-400">Regional Factors</span>
-        <span className="text-slate-200 text-xs text-right max-w-[160px]">
+        <span className="text-slate-300 text-xs text-right max-w-[160px]">
           {regionalRisk.emoji} {regionalRisk.label}
         </span>
       </div>
     </div>
 
-    <div className="pt-2 border-t border-[#334155]">
-      <p className="text-xs text-slate-500 mb-2">Overall Threat Level</p>
+    <div className="pt-2.5 border-t border-[#334155]">
+      <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-2">Overall Threat Level</p>
       <span
-        className={`inline-block px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wide ${
+        className={`inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${
           THREAT_BADGE[overallThreat] || THREAT_BADGE.low
         }`}
       >
@@ -311,29 +316,33 @@ const ThreatAssessment = ({ freqRisk, regionalRisk, overallThreat }) => (
 // HealthPanel
 // ---------------------------------------------------------------------------
 
-const DOT_COLOR = { green: 'bg-green-500', yellow: 'bg-yellow-400', red: 'bg-red-500' };
+const DOT_COLOR = {
+  green: 'bg-green-500 shadow-[0_0_6px_#22c55e] animate-pulse',
+  yellow: 'bg-yellow-400 shadow-[0_0_6px_#facc15]',
+  red: 'bg-red-500 shadow-[0_0_6px_#ef4444]',
+};
 
 const HealthPanel = ({ healthStatus, totalAlerts, timestamp }) => (
-  <div className="bg-[#0f172a] border border-[#334155] rounded-lg p-4 space-y-3">
+  <div className="bg-[#0f172a] border border-[#2d3f55] rounded-lg p-4 space-y-3">
     <SectionHeading>Sensor Health</SectionHeading>
 
-    <div className="flex items-center gap-2">
-      <span className={`w-3 h-3 rounded-full flex-shrink-0 ${DOT_COLOR[healthStatus.dot] || 'bg-slate-500'}`} />
+    <div className="flex items-center gap-2.5">
+      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${DOT_COLOR[healthStatus.dot] || 'bg-slate-500'}`} />
       <span className="text-white font-semibold text-sm">{healthStatus.label}</span>
     </div>
 
-    <div className="space-y-2 text-sm">
+    <div className="space-y-2.5 text-sm">
       <div className="flex justify-between">
         <span className="text-slate-400">Alerts logged</span>
-        <span className="text-slate-200 font-medium">{totalAlerts}</span>
+        <span className="text-slate-200 font-semibold tabular-nums">{totalAlerts}</span>
       </div>
       <div className="flex justify-between gap-4">
         <span className="text-slate-400">Last transmission</span>
-        <span className="text-slate-200 text-xs text-right">{formatTs(timestamp)}</span>
+        <span className="text-slate-300 text-xs text-right">{formatTs(timestamp)}</span>
       </div>
       <div className="flex justify-between gap-4">
         <span className="text-slate-400">Uptime estimate</span>
-        <span className="text-slate-200 text-xs text-right">
+        <span className="text-slate-300 text-xs text-right">
           {totalAlerts >= 10
             ? 'Stable transmission history'
             : 'Insufficient data for uptime estimate'}
@@ -398,24 +407,30 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
   const overallThreat = combineRisk(freqRisk, regionalRisk);
 
   return (
-    <div className="bg-[#1e293b] border border-[#334155] rounded-lg overflow-hidden">
+    <div className={`bg-[#1e293b] border rounded-lg overflow-hidden transition-colors duration-150 ${
+      isExpanded ? 'border-[#3d5275]' : 'border-[#334155] hover:border-[#3d5275]'
+    }`}>
 
       {/* ── Collapsed row ──────────────────────────────────────────────── */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#263348] transition-colors text-left"
+        className={`w-full flex items-center justify-between gap-3 px-4 py-3.5 transition-colors duration-150 text-left ${
+          isExpanded ? 'bg-[#243247]' : 'hover:bg-[#243247]'
+        }`}
       >
-        {/* Left: id + severity + freq */}
+        {/* Left: id + severity + freq + timestamp */}
         <div className="flex items-center gap-3 min-w-0 flex-wrap">
-          <span className="font-mono font-bold text-white text-sm flex-shrink-0">
+          <span className="font-mono font-bold text-white text-sm flex-shrink-0 tracking-wide">
             {node.nodeId}
           </span>
           <SeverityBadge severity={current.severity} />
-          <span className="text-slate-300 text-sm flex-shrink-0">
-            {typeof current.peakFrequency === 'number'
-              ? current.peakFrequency.toFixed(1)
-              : current.peakFrequency}{' '}
-            Hz
+          <span className="text-sm font-mono flex-shrink-0">
+            <span className="text-slate-200 font-semibold">
+              {typeof current.peakFrequency === 'number'
+                ? current.peakFrequency.toFixed(1)
+                : current.peakFrequency}
+            </span>
+            <span className="text-slate-500 ml-1 text-xs">Hz</span>
           </span>
           <span className="text-slate-500 text-xs flex-shrink-0 hidden sm:block">
             {formatTs(current.timestamp)}
@@ -424,11 +439,13 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
 
         {/* Right: health dot + chevron */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <span
-              className={`w-2 h-2 rounded-full ${DOT_COLOR[healthStatus.dot] || 'bg-slate-500'}`}
+              className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                DOT_COLOR[healthStatus.dot] || 'bg-slate-500'
+              }`}
             />
-            <span className="text-xs text-slate-400 hidden sm:block">{healthStatus.label}</span>
+            <span className="text-xs text-slate-500 hidden sm:block">{healthStatus.label}</span>
           </div>
           <ChevronIcon isExpanded={isExpanded} />
         </div>
@@ -436,7 +453,7 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
 
       {/* ── Expanded panel ─────────────────────────────────────────────── */}
       {isExpanded && (
-        <div className="border-t border-[#334155] p-4 space-y-5">
+        <div className="border-t border-[#334155] p-5 space-y-5 bg-[#19253a]">
 
           {/* Section 1: Frequency Over Time */}
           <div>
@@ -450,7 +467,7 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
           <div>
             <SectionHeading>Blackout Risk Zone</SectionHeading>
             <RiskZoneMap node={node} severity={current.severity} />
-            <p className="text-xs italic text-slate-500 mt-2 leading-relaxed">
+            <p className="text-xs italic text-slate-600 mt-2 leading-relaxed">
               Blackout risk zone is simulated based on severity level. Real propagation data pending
               hardware deployment.
             </p>
@@ -521,16 +538,20 @@ const SensorList = ({ alerts, liveAlert }) => {
     <div className="flex-1 overflow-y-auto alert-scroll">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-3">
 
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-200">Sensor Nodes</h2>
-          <span className="text-xs text-slate-500">{nodes.length} nodes registered</span>
+        <div className="flex items-center justify-between mb-5 pb-3 border-b border-[#334155]">
+          <h2 className="text-sm font-semibold text-slate-200 tracking-wide">Sensor Nodes</h2>
+          <span className="text-xs text-slate-600 bg-[#1e293b] border border-[#334155] px-2.5 py-1 rounded-full tabular-nums">
+            {nodes.length} registered
+          </span>
         </div>
 
         {nodes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="text-4xl mb-4">📡</div>
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+            <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center border border-[#334155]">
+              <span className="text-3xl opacity-50">📡</span>
+            </div>
             <p className="text-slate-300 font-medium">No sensor data received yet</p>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-600 text-sm max-w-xs">
               Waiting for hardware nodes to come online and POST alerts.
             </p>
           </div>

@@ -1,7 +1,7 @@
 {
-  "name": "voltvigil-backend",
+  "name": "telegrid-backend",
   "version": "1.0.0",
-  "description": "VoltVigil real-time power grid fault detection backend",
+  "description": "TeleGrid real-time power grid fault detection backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
