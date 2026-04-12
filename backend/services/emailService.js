@@ -10,8 +10,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// In-memory cooldown tracker: { nodeId: lastSentTimestamp }
+// In-memory cooldown tracker: { nodeId: lastSuccessfulSendTimestamp }
 const lastAlertSent = {};
+
+function smtpConfigured() {
+  return Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+}
+
+function getMailFrom() {
+  if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
+  const user = process.env.EMAIL_USER;
+  if (user) return `TeleGrid Alerts <${user}>`;
+  return undefined;
+}
 
 function formatCoordinates(lat, lng) {
   const latDir = lat >= 0 ? 'N' : 'S';
@@ -137,14 +148,24 @@ async function sendAlertEmails(alert) {
   // Only send for high or critical
   if (!['high', 'critical'].includes(alert.severity)) return;
 
-  // Cooldown: skip if same sensor triggered within 5 minutes
+  if (!smtpConfigured()) {
+    console.log('[Email] EMAIL_USER and EMAIL_PASS must be set to send mail; skipping');
+    return;
+  }
+
+  const from = getMailFrom();
+  if (!from) {
+    console.log('[Email] Could not determine From address; skipping');
+    return;
+  }
+
+  // Cooldown: skip if we successfully emailed this sensor within the last 5 minutes
   const now = Date.now();
   const lastSent = lastAlertSent[alert.nodeId] || 0;
   if (now - lastSent < 5 * 60 * 1000) {
     console.log(`[Email] Cooldown active for ${alert.nodeId}, skipping`);
     return;
   }
-  lastAlertSent[alert.nodeId] = now;
 
   // Fetch eligible subscribers:
   // - minSeverity 'high' → receives high AND critical alerts
@@ -168,7 +189,7 @@ async function sendAlertEmails(alert) {
   for (const sub of subscribers) {
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL_FROM,
+        from,
         to: sub.email,
         subject,
         html,
@@ -178,6 +199,10 @@ async function sendAlertEmails(alert) {
     } catch (err) {
       console.error(`[Email] Failed to send to ${sub.email}:`, err.message);
     }
+  }
+
+  if (notified > 0) {
+    lastAlertSent[alert.nodeId] = Date.now();
   }
 
   // Persist notification log entry

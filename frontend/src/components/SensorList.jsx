@@ -11,6 +11,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -26,15 +27,22 @@ const SEVERITY_COLOR = {
 const SEVERITY_ORDER = { low: 0, medium: 1, high: 2, critical: 3 };
 
 const SEVERITY_BADGE = {
-  critical: 'bg-red-500/15 text-red-400 border border-red-500/40 shadow-[0_0_8px_rgba(239,68,68,0.12)]',
-  high: 'bg-orange-500/15 text-orange-400 border border-orange-500/40',
-  medium: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/40',
-  low: 'bg-green-500/15 text-green-400 border border-green-500/40',
-  unknown: 'bg-slate-500/15 text-slate-400 border border-slate-500/30',
+  critical: 'bg-red-500/20 text-red-300 border border-red-500/30',
+  high:     'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+  medium:   'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30',
+  low:      'bg-green-500/20 text-green-300 border border-green-500/30',
+  unknown:  'bg-slate-500/20 text-slate-300 border border-slate-500/30',
 };
 
 // Leaflet Circle radius in meters
 const RISK_RADIUS = { critical: 100000, high: 50000, medium: 25000, low: 10000, unknown: 10000 };
+
+const HEALTH_DOT = {
+  green: 'bg-green-400 animate-pulse',
+  yellow: 'bg-yellow-400',
+  red: 'bg-red-400',
+  gray: 'bg-gray-500',
+};
 
 // ---------------------------------------------------------------------------
 // Helper functions
@@ -108,7 +116,7 @@ const formatTs = (ts) => {
 
 const SeverityBadge = ({ severity }) => (
   <span
-    className={`text-[11px] font-bold px-2.5 py-0.5 rounded capitalize tracking-wider ${
+    className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
       SEVERITY_BADGE[severity] || SEVERITY_BADGE.unknown
     }`}
   >
@@ -118,7 +126,7 @@ const SeverityBadge = ({ severity }) => (
 
 const ChevronIcon = ({ isExpanded }) => (
   <svg
-    className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-transform duration-200 ${
+    className={`w-4 h-4 text-[#475569] flex-shrink-0 transition-transform duration-200 ${
       isExpanded ? 'rotate-180' : ''
     }`}
     fill="none"
@@ -130,11 +138,10 @@ const ChevronIcon = ({ isExpanded }) => (
   </svg>
 );
 
-const SectionHeading = ({ children }) => (
-  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-    <span className="w-1 h-3 bg-slate-600 rounded-full inline-block" />
+const PanelHeading = ({ children }) => (
+  <h3 className="text-xs font-semibold tracking-widest uppercase text-[#475569] mb-4">
     {children}
-  </h4>
+  </h3>
 );
 
 // ---------------------------------------------------------------------------
@@ -158,9 +165,9 @@ const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-[#1e293b] border border-[#334155] rounded-lg px-3 py-2 text-xs shadow-xl">
-      <p className="text-slate-500 mb-1">{label}</p>
+      <p className="text-[#475569] mb-1">{label}</p>
       <p className="font-bold tabular-nums" style={{ color: '#eab308' }}>
-        {payload[0].value?.toFixed(1)} <span className="font-normal text-slate-400">Hz</span>
+        {payload[0].value?.toFixed(1)} <span className="font-normal text-[#94a3b8]">Hz</span>
       </p>
     </div>
   );
@@ -233,7 +240,7 @@ const RiskZoneMap = ({ node, severity }) => {
       key={`risk-${node.nodeId}`}
       center={center}
       zoom={6}
-      style={{ width: '100%', height: '250px', borderRadius: '8px' }}
+      style={{ width: '100%', height: '220px', borderRadius: '8px' }}
       zoomControl={false}
       scrollWheelZoom={false}
     >
@@ -272,33 +279,31 @@ const RiskZoneMap = ({ node, severity }) => {
 // ---------------------------------------------------------------------------
 
 const THREAT_BADGE = {
-  critical: 'bg-red-500/15 text-red-300 border border-red-500/40',
-  high: 'bg-orange-500/15 text-orange-300 border border-orange-500/40',
-  medium: 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/40',
-  low: 'bg-green-500/15 text-green-300 border border-green-500/40',
+  critical: 'bg-red-500/20 text-red-300 border border-red-500/30',
+  high:     'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+  medium:   'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30',
+  low:      'bg-green-500/20 text-green-300 border border-green-500/30',
 };
 
 const ThreatAssessment = ({ freqRisk, regionalRisk, overallThreat }) => (
-  <div className="bg-[#0f172a] border border-[#2d3f55] rounded-lg p-4 space-y-3">
-    <SectionHeading>Threat Assessment</SectionHeading>
-
+  <div className="space-y-3">
     <div className="space-y-2.5 text-sm">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-slate-400">Frequency Risk</span>
+        <span className="text-[#94a3b8]">Frequency Risk</span>
         <SeverityBadge severity={freqRisk.level} />
       </div>
       <div className="flex items-start justify-between gap-2">
-        <span className="text-slate-400">Regional Factors</span>
-        <span className="text-slate-300 text-xs text-right max-w-[160px]">
+        <span className="text-[#94a3b8]">Regional Factors</span>
+        <span className="text-[#f8fafc] text-xs text-right max-w-[160px]">
           {regionalRisk.emoji} {regionalRisk.label}
         </span>
       </div>
     </div>
 
     <div className="pt-2.5 border-t border-[#334155]">
-      <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-2">Overall Threat Level</p>
+      <p className="text-[10px] text-[#475569] uppercase tracking-widest mb-2">Overall Threat Level</p>
       <span
-        className={`inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${
+        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
           THREAT_BADGE[overallThreat] || THREAT_BADGE.low
         }`}
       >
@@ -306,7 +311,7 @@ const ThreatAssessment = ({ freqRisk, regionalRisk, overallThreat }) => (
       </span>
     </div>
 
-    <p className="text-xs italic text-slate-600 leading-relaxed pt-1">
+    <p className="text-xs italic text-[#475569] leading-relaxed pt-1">
       Threat assessment will be refined with real environmental and grid topology data post-deployment.
     </p>
   </div>
@@ -317,35 +322,33 @@ const ThreatAssessment = ({ freqRisk, regionalRisk, overallThreat }) => (
 // ---------------------------------------------------------------------------
 
 const DOT_COLOR = {
-  green: 'bg-green-500 shadow-[0_0_6px_#22c55e] animate-pulse',
+  green:  'bg-green-500 shadow-[0_0_6px_#22c55e] animate-pulse',
   yellow: 'bg-yellow-400 shadow-[0_0_6px_#facc15]',
-  red: 'bg-red-500 shadow-[0_0_6px_#ef4444]',
+  red:    'bg-red-500 shadow-[0_0_6px_#ef4444]',
 };
 
 const HealthPanel = ({ healthStatus, totalAlerts, timestamp }) => (
-  <div className="bg-[#0f172a] border border-[#2d3f55] rounded-lg p-4 space-y-3">
-    <SectionHeading>Sensor Health</SectionHeading>
-
+  <div className="space-y-3">
     <div className="flex items-center gap-2.5">
       <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${DOT_COLOR[healthStatus.dot] || 'bg-slate-500'}`} />
-      <span className="text-white font-semibold text-sm">{healthStatus.label}</span>
+      <span className="text-[#f8fafc] font-semibold text-sm">{healthStatus.label}</span>
     </div>
 
     <div className="space-y-2.5 text-sm">
       <div className="flex justify-between">
-        <span className="text-slate-400">Alerts logged</span>
-        <span className="text-slate-200 font-semibold tabular-nums">{totalAlerts}</span>
+        <span className="text-[#94a3b8]">Alerts logged</span>
+        <span className="text-[#f8fafc] font-semibold tabular-nums font-mono">{totalAlerts}</span>
       </div>
       <div className="flex justify-between gap-4">
-        <span className="text-slate-400">Last transmission</span>
-        <span className="text-slate-300 text-xs text-right">{formatTs(timestamp)}</span>
+        <span className="text-[#94a3b8]">Last transmission</span>
+        <span className="text-[#94a3b8] text-xs text-right font-mono">{formatTs(timestamp)}</span>
       </div>
       <div className="flex justify-between gap-4">
-        <span className="text-slate-400">Uptime estimate</span>
-        <span className="text-slate-300 text-xs text-right">
+        <span className="text-[#94a3b8]">Uptime estimate</span>
+        <span className="text-[#94a3b8] text-xs text-right">
           {totalAlerts >= 10
-            ? 'Stable transmission history'
-            : 'Insufficient data for uptime estimate'}
+            ? 'Stable history'
+            : 'Insufficient data'}
         </span>
       </div>
     </div>
@@ -357,7 +360,6 @@ const HealthPanel = ({ healthStatus, totalAlerts, timestamp }) => (
 // ---------------------------------------------------------------------------
 
 const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
-  // If liveAlert is newer than the current node data, use it for display
   const current = useMemo(() => {
     if (
       liveAlert &&
@@ -376,7 +378,6 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
     };
   }, [node, liveAlert]);
 
-  // Build graph data: all nodeAlerts + liveAlert (deduped), last 20 sorted by time
   const graphData = useMemo(() => {
     const all = [...nodeAlerts];
     if (liveAlert && !all.some((a) => a._id === liveAlert._id)) {
@@ -402,89 +403,102 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
     (liveAlert && !nodeAlerts.some((a) => a._id === liveAlert._id) ? 1 : 0);
 
   const healthStatus = getHealthStatus(current);
-  const freqRisk = getFreqRisk(current.peakFrequency);
+  const freqRisk     = getFreqRisk(current.peakFrequency);
   const regionalRisk = getRegionalRisk(node.lat, node.lng);
   const overallThreat = combineRisk(freqRisk, regionalRisk);
+  const healthDot = HEALTH_DOT[healthStatus.dot] || HEALTH_DOT.gray;
 
   return (
-    <div className={`bg-[#1e293b] border rounded-lg overflow-hidden transition-colors duration-150 ${
-      isExpanded ? 'border-[#3d5275]' : 'border-[#334155] hover:border-[#3d5275]'
-    }`}>
-
-      {/* ── Collapsed row ──────────────────────────────────────────────── */}
+    <div
+      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
+        isExpanded
+          ? 'border-[#475569]'
+          : 'border-[#334155] hover:border-[#3b82f6]/40'
+      }`}
+    >
+      {/* ── Collapsed row ─────────────────────────────────────────────── */}
       <button
         onClick={onToggle}
-        className={`w-full flex items-center justify-between gap-3 px-4 py-3.5 transition-colors duration-150 text-left ${
-          isExpanded ? 'bg-[#243247]' : 'hover:bg-[#243247]'
+        className={`w-full flex items-center justify-between gap-6 px-6 py-4 text-left transition-colors duration-150 group ${
+          isExpanded ? 'bg-[#1e293b]' : 'bg-[#1e293b] hover:bg-[#243247]'
         }`}
       >
-        {/* Left: id + severity + freq + timestamp */}
-        <div className="flex items-center gap-3 min-w-0 flex-wrap">
-          <span className="font-mono font-bold text-white text-sm flex-shrink-0 tracking-wide">
+        {/* Left — health dot + node ID */}
+        <div className="flex items-center gap-3 w-36 flex-shrink-0">
+          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${healthDot}`} />
+          <span className="text-[#f8fafc] font-mono font-semibold text-sm tracking-wide">
             {node.nodeId}
-          </span>
-          <SeverityBadge severity={current.severity} />
-          <span className="text-sm font-mono flex-shrink-0">
-            <span className="text-slate-200 font-semibold">
-              {typeof current.peakFrequency === 'number'
-                ? current.peakFrequency.toFixed(1)
-                : current.peakFrequency}
-            </span>
-            <span className="text-slate-500 ml-1 text-xs">Hz</span>
-          </span>
-          <span className="text-slate-500 text-xs flex-shrink-0 hidden sm:block">
-            {formatTs(current.timestamp)}
           </span>
         </div>
 
-        {/* Right: health dot + chevron */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                DOT_COLOR[healthStatus.dot] || 'bg-slate-500'
-              }`}
-            />
-            <span className="text-xs text-slate-500 hidden sm:block">{healthStatus.label}</span>
+        {/* Center — key stats */}
+        <div className="flex items-center gap-10 flex-1 justify-center">
+          <div className="text-center">
+            <p className="text-xs text-[#475569] uppercase tracking-wider mb-0.5">Frequency</p>
+            <p className="text-[#f8fafc] font-mono text-sm font-semibold">
+              {typeof current.peakFrequency === 'number'
+                ? current.peakFrequency.toFixed(1)
+                : current.peakFrequency}{' '}
+              <span className="text-[#475569] text-xs font-normal">Hz</span>
+            </p>
           </div>
+          <div className="text-center">
+            <p className="text-xs text-[#475569] uppercase tracking-wider mb-0.5">Last Seen</p>
+            <p className="text-[#94a3b8] font-mono text-sm">{formatTs(current.timestamp)}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-[#475569] uppercase tracking-wider mb-0.5">Alerts</p>
+            <p className="text-[#f8fafc] font-mono text-sm font-semibold">{totalAlerts}</p>
+          </div>
+        </div>
+
+        {/* Right — severity badge + chevron */}
+        <div className="flex items-center gap-4 flex-shrink-0">
+          <SeverityBadge severity={current.severity} />
           <ChevronIcon isExpanded={isExpanded} />
         </div>
       </button>
 
       {/* ── Expanded panel ─────────────────────────────────────────────── */}
       {isExpanded && (
-        <div className="border-t border-[#334155] p-5 space-y-5 bg-[#19253a]">
+        <div className="bg-[#0f172a] border-t border-[#334155] p-6 grid grid-cols-2 gap-5">
 
-          {/* Section 1: Frequency Over Time */}
-          <div>
-            <SectionHeading>Frequency Over Time</SectionHeading>
+          {/* Frequency graph — full width */}
+          <div className="col-span-2 bg-[#1e293b] rounded-xl p-5 border border-[#334155]">
+            <PanelHeading>Frequency Over Time</PanelHeading>
             <div style={{ height: '220px' }}>
               <FrequencyGraph data={graphData} severity={current.severity} />
             </div>
           </div>
 
-          {/* Section 2: Blackout Risk Zone Map */}
-          <div>
-            <SectionHeading>Blackout Risk Zone</SectionHeading>
+          {/* Blackout risk zone map */}
+          <div className="bg-[#1e293b] rounded-xl p-5 border border-[#334155]">
+            <PanelHeading>Blackout Risk Zone</PanelHeading>
             <RiskZoneMap node={node} severity={current.severity} />
-            <p className="text-xs italic text-slate-600 mt-2 leading-relaxed">
-              Blackout risk zone is simulated based on severity level. Real propagation data pending
-              hardware deployment.
+            <p className="text-xs italic text-[#475569] mt-2 leading-relaxed">
+              Simulated risk zone based on severity level. Real propagation data pending hardware
+              deployment.
             </p>
           </div>
 
-          {/* Sections 3 & 4 side by side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ThreatAssessment
-              freqRisk={freqRisk}
-              regionalRisk={regionalRisk}
-              overallThreat={overallThreat}
-            />
-            <HealthPanel
-              healthStatus={healthStatus}
-              totalAlerts={totalAlerts}
-              timestamp={current.timestamp}
-            />
+          {/* Threat assessment + sensor health stacked */}
+          <div className="flex flex-col gap-4">
+            <div className="bg-[#1e293b] rounded-xl p-5 border border-[#334155] flex-1">
+              <PanelHeading>Threat Assessment</PanelHeading>
+              <ThreatAssessment
+                freqRisk={freqRisk}
+                regionalRisk={regionalRisk}
+                overallThreat={overallThreat}
+              />
+            </div>
+            <div className="bg-[#1e293b] rounded-xl p-5 border border-[#334155] flex-1">
+              <PanelHeading>Sensor Health</PanelHeading>
+              <HealthPanel
+                healthStatus={healthStatus}
+                totalAlerts={totalAlerts}
+                timestamp={current.timestamp}
+              />
+            </div>
           </div>
 
         </div>
@@ -500,7 +514,6 @@ const SensorCard = ({ node, nodeAlerts, liveAlert, isExpanded, onToggle }) => {
 const SensorList = ({ alerts, liveAlert }) => {
   const [expandedId, setExpandedId] = useState(null);
 
-  // Build node list from real alert data only — one entry per unique nodeId
   const nodes = useMemo(() => {
     const latestByNode = {};
     alerts.forEach((alert) => {
@@ -521,7 +534,6 @@ const SensorList = ({ alerts, liveAlert }) => {
     }));
   }, [alerts]);
 
-  // Per-node alert history for graphs
   const alertsByNode = useMemo(() => {
     const map = {};
     alerts.forEach((alert) => {
@@ -535,43 +547,48 @@ const SensorList = ({ alerts, liveAlert }) => {
     setExpandedId((prev) => (prev === nodeId ? null : nodeId));
 
   return (
-    <div className="flex-1 overflow-y-auto alert-scroll">
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-3">
+    <div className="flex-1 overflow-hidden flex flex-col">
 
-        <div className="flex items-center justify-between mb-5 pb-3 border-b border-[#334155]">
-          <h2 className="text-sm font-semibold text-slate-200 tracking-wide">Sensor Nodes</h2>
-          <span className="text-xs text-slate-600 bg-[#1e293b] border border-[#334155] px-2.5 py-1 rounded-full tabular-nums">
-            {nodes.length} registered
-          </span>
-        </div>
+      {/* Page header */}
+      <div className="px-8 py-6 border-b border-[#1e293b] flex-shrink-0">
+        <h1 className="text-xl font-bold text-[#f8fafc] tracking-tight">Sensor Nodes</h1>
+        <p className="text-sm text-[#475569] mt-0.5">
+          {nodes.length} {nodes.length === 1 ? 'node' : 'nodes'} active — click any node to expand details
+        </p>
+      </div>
 
-        {nodes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
-            <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center border border-[#334155]">
-              <span className="text-3xl opacity-50">📡</span>
+      {/* Scrollable node list */}
+      <div className="flex-1 overflow-y-auto alert-scroll">
+        <div className="max-w-4xl mx-auto px-6 py-6 space-y-3">
+
+          {nodes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+              <div className="w-16 h-16 bg-[#1e293b] rounded-2xl flex items-center justify-center border border-[#334155]">
+                <span className="text-3xl opacity-50">📡</span>
+              </div>
+              <p className="text-[#f8fafc] font-medium">No sensor data received yet</p>
+              <p className="text-[#475569] text-sm max-w-xs">
+                Waiting for hardware nodes to come online and POST alerts.
+              </p>
             </div>
-            <p className="text-slate-300 font-medium">No sensor data received yet</p>
-            <p className="text-slate-600 text-sm max-w-xs">
-              Waiting for hardware nodes to come online and POST alerts.
-            </p>
-          </div>
-        ) : (
-          nodes.map((node) => {
-            const relevantLiveAlert =
-              liveAlert?.nodeId === node.nodeId ? liveAlert : null;
-            return (
-              <SensorCard
-                key={node.nodeId}
-                node={node}
-                nodeAlerts={alertsByNode[node.nodeId] || []}
-                liveAlert={relevantLiveAlert}
-                isExpanded={expandedId === node.nodeId}
-                onToggle={() => toggleExpand(node.nodeId)}
-              />
-            );
-          })
-        )}
+          ) : (
+            nodes.map((node) => {
+              const relevantLiveAlert =
+                liveAlert?.nodeId === node.nodeId ? liveAlert : null;
+              return (
+                <SensorCard
+                  key={node.nodeId}
+                  node={node}
+                  nodeAlerts={alertsByNode[node.nodeId] || []}
+                  liveAlert={relevantLiveAlert}
+                  isExpanded={expandedId === node.nodeId}
+                  onToggle={() => toggleExpand(node.nodeId)}
+                />
+              );
+            })
+          )}
 
+        </div>
       </div>
     </div>
   );

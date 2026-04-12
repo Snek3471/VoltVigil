@@ -16,6 +16,10 @@ export const getAlerts = (filters = {}) => {
 
 export const deleteAlert = (id) => api.delete(`/api/alerts/${id}`);
 
+/** POST fake alerts for testing (map, feed, socket). Query: count (1–25, default 8) */
+export const simulateAlerts = (count = 8) =>
+  api.post('/api/alerts/simulate', null, { params: { count } });
+
 // Subscriber management
 export const getSubscribers = () => api.get('/api/subscribers');
 export const createSubscriber = (data) => api.post('/api/subscribers', data);
