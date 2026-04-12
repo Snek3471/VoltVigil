@@ -81,7 +81,15 @@ def predict():
         'modelInfo': f"{model_data['model_name']} trained on {model_data['n_original_samples']} real samples from INMP441 mic",
     })
 
+def warmup_model():
+    if model is None:
+        return
+    dummy = np.zeros((1, len(FEATURES)))
+    model.predict_proba(dummy)
+    print('[ML] Model warmed up and ready')
+
 load_model()
+warmup_model()
 
 if __name__ == '__main__':
     app.run(port=5001, debug=False)

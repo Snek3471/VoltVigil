@@ -30,7 +30,10 @@ app.use('/api/subscribers', require('./routes/subscribers'));
 app.use('/api/notifications', require('./routes/notifications'));
 
 // MongoDB
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  bufferCommands: false,
+  maxPoolSize: 10,
+})
   .then(() => console.log('[MongoDB] Connected successfully'))
   .catch(err => console.error('[MongoDB] Error:', err));
 

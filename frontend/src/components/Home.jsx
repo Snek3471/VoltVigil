@@ -2,40 +2,46 @@ import { useState, useMemo } from "react";
 import { ShaderAnimation } from './ui/shader-animation';
 import { AnimatedText } from '@/components/ui/animated-text';
 import { TextScramble } from '@/components/ui/text-scramble';
-import { TeleGridGlobe, defaultSensors } from '@/components/ui/telegrid-globe';
+import { TeleGridGlobe } from '@/components/ui/telegrid-globe';
+import { defaultSensorNodes, REAL_SENSOR_ID } from '@/data/sensorNodes';
 
 const Home = ({ onTabChange, alerts = [] }) => {
   const [scrambleTrigger, setScrambleTrigger] = useState(true);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Derive sensor markers from real alert data; fall back to defaults
+  // Derive sensor markers — always 4 nodes, real sensor updated from live data
   const sensorMarkers = useMemo(() => {
-    if (!alerts || alerts.length === 0) return defaultSensors;
+    const nodes = [...defaultSensorNodes];
 
-    const nodeMap = {};
-    alerts.forEach((alert) => {
-      if (
-        !nodeMap[alert.nodeId] ||
-        new Date(alert.timestamp) > new Date(nodeMap[alert.nodeId].timestamp)
-      ) {
-        nodeMap[alert.nodeId] = alert;
+    if (alerts && alerts.length > 0) {
+      const realAlerts = alerts.filter(a => a.nodeId === REAL_SENSOR_ID);
+      if (realAlerts.length > 0) {
+        const latest = realAlerts.sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+        )[0];
+        const idx = nodes.findIndex(n => n.nodeId === REAL_SENSOR_ID);
+        if (idx !== -1) {
+          nodes[idx] = {
+            ...nodes[idx],
+            lat:           latest.lat,
+            lng:           latest.lng,
+            peakFrequency: latest.peakFrequency,
+            severity:      latest.severity,
+          };
+        }
       }
-    });
+    }
 
-    const mapped = Object.values(nodeMap).map((alert) => ({
-      id:            alert.nodeId,
-      nodeId:        alert.nodeId,
-      location:      [alert.lat, alert.lng],
-      peakFrequency: alert.peakFrequency,
-      severity:      alert.severity,
+    return nodes.map(n => ({
+      id:            n.nodeId,
+      nodeId:        n.nodeId,
+      location:      [n.lat, n.lng],
+      peakFrequency: n.peakFrequency,
+      severity:      n.severity,
     }));
-
-    return mapped.length > 0 ? mapped : defaultSensors;
   }, [alerts]);
 
-  const activeNodeCount = alerts.length > 0
-    ? new Set(alerts.map((a) => a.nodeId)).size
-    : defaultSensors.length;
+  const activeNodeCount = 4;
 
   return (
     <div className="relative w-full h-screen overflow-hidden">

@@ -5,6 +5,7 @@ import About from './components/About';
 import MapView from './components/MapView';
 import SensorList from './components/SensorList';
 import Notifications from './components/Notifications';
+import GlobalThermalCursor from './components/GlobalThermalCursor';
 import useSocket from './hooks/useSocket';
 import { getAlerts } from './services/api';
 
@@ -24,7 +25,8 @@ const App = () => {
       setLoading(true);
       setError(null);
       const res = await getAlerts();
-      setAlerts(res.data);
+      const data = res.data;
+      setAlerts(Array.isArray(data) ? data : []);
     } catch (err) {
       const apiMsg = err.response?.data?.error;
       setError(apiMsg || err.message || 'Failed to fetch alerts');
@@ -37,12 +39,18 @@ const App = () => {
     fetchAlerts();
   }, [fetchAlerts]);
 
-  // Prepend real-time alerts from Socket.io
+  // Handle new_alert (prepend) and alert_updated (replace) from Socket.io
   useEffect(() => {
     if (!latestAlert) return;
     setAlerts((prev) => {
-      const exists = prev.some((a) => a._id === latestAlert._id);
-      if (exists) return prev;
+      const existingIndex = prev.findIndex((a) => a._id === latestAlert._id);
+      if (existingIndex !== -1) {
+        // alert_updated — replace in-place with ML-enriched version
+        const updated = [...prev];
+        updated[existingIndex] = latestAlert;
+        return updated;
+      }
+      // new_alert — prepend
       return [latestAlert, ...prev].slice(0, MAX_ALERTS);
     });
   }, [latestAlert]);
@@ -60,6 +68,8 @@ const App = () => {
       <div className="relative h-screen overflow-hidden bg-black text-white">
         <TabNav {...tabNavProps} overlay={true} />
         <Home onTabChange={setActiveTab} alerts={alerts} isConnected={isConnected} />
+        {/* Cursor — last child, floats above everything via z-index:9999 */}
+        <GlobalThermalCursor />
       </div>
     );
   }
@@ -88,6 +98,9 @@ const App = () => {
       {activeTab === 'about' && (
         <About alerts={alerts} isConnected={isConnected} />
       )}
+
+      {/* Cursor — last child, floats above everything via z-index:9999 */}
+      <GlobalThermalCursor />
     </div>
   );
 };

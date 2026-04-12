@@ -9,7 +9,12 @@ const useSocket = () => {
 
   useEffect(() => {
     const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
+      upgrade: true,
+      rememberUpgrade: true,
+      timeout: 5000,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 2000,
     });
 
     socket.on('connect', () => {
@@ -28,6 +33,11 @@ const useSocket = () => {
 
     socket.on('new_alert', (alert) => {
       console.log('[Socket.io] New alert received:', alert);
+      setLatestAlert(alert);
+    });
+
+    socket.on('alert_updated', (alert) => {
+      console.log('[Socket.io] Alert updated with ML:', alert);
       setLatestAlert(alert);
     });
 

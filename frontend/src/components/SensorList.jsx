@@ -7,25 +7,7 @@ import {
 } from 'recharts'
 import { DitheringShader } from '@/components/ui/dithering-shader'
 import { getClosestCity, getRegionRisk } from '@/utils/cityLookup'
-
-// ---------------------------------------------------------------------------
-// Simulated fallback data
-// ---------------------------------------------------------------------------
-
-const simulatedNodes = [
-  { nodeId: 'sensor-01', lat: 38.90, lng: -77.03,  peakFrequency: 847,  severity: 'high'     },
-  { nodeId: 'sensor-02', lat: 40.71, lng: -74.00,  peakFrequency: 312,  severity: 'low'      },
-  { nodeId: 'sensor-03', lat: 34.05, lng: -118.24, peakFrequency: 1850, severity: 'critical'  },
-  { nodeId: 'sensor-04', lat: 41.87, lng: -87.62,  peakFrequency: 640,  severity: 'medium'   },
-  { nodeId: 'sensor-05', lat: 29.76, lng: -95.36,  peakFrequency: 278,  severity: 'low'      },
-  { nodeId: 'sensor-06', lat: 33.44, lng: -112.07, peakFrequency: 920,  severity: 'high'     },
-  { nodeId: 'sensor-07', lat: 47.60, lng: -122.33, peakFrequency: 510,  severity: 'medium'   },
-  { nodeId: 'sensor-08', lat: 25.76, lng: -80.19,  peakFrequency: 1760, severity: 'critical'  },
-  { nodeId: 'sensor-09', lat: 39.95, lng: -75.16,  peakFrequency: 190,  severity: 'low'      },
-  { nodeId: 'sensor-10', lat: 32.77, lng: -96.79,  peakFrequency: 1100, severity: 'high'     },
-  { nodeId: 'sensor-11', lat: 37.77, lng: -122.41, peakFrequency: 430,  severity: 'medium'   },
-  { nodeId: 'sensor-12', lat: 42.36, lng: -71.05,  peakFrequency: 220,  severity: 'low'      },
-]
+import { defaultSensorNodes, REAL_SENSOR_ID } from '@/data/sensorNodes'
 
 // ---------------------------------------------------------------------------
 // Severity config
@@ -49,46 +31,63 @@ const shaderColors = {
 // Real-time frequency graph
 // ---------------------------------------------------------------------------
 
-function FrequencyGraph({ nodeId, initialFreq, severity, liveAlert }) {
+function FrequencyGraph({ nodeId, initialFreq, severity, liveAlert, alerts }) {
   const config    = severityConfig[severity] || severityConfig.low
   const maxPoints = 20
 
-  const [data, setData] = useState(() =>
-    Array.from({ length: 10 }, (_, i) => ({
-      time:      new Date(Date.now() - (9 - i) * 3000).toLocaleTimeString(),
-      frequency: initialFreq + (Math.random() - 0.5) * 50,
+  const [data, setData] = useState(() => {
+    // Seed with real historical data for this node if available
+    if (alerts && alerts.length > 0) {
+      const nodeAlerts = alerts
+        .filter(a => a.nodeId === nodeId)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+        .slice(-10)
+      if (nodeAlerts.length > 0) {
+        return nodeAlerts.map(a => ({
+          time:      new Date(a.timestamp).toLocaleTimeString(),
+          frequency: a.peakFrequency || initialFreq,
+        }))
+      }
+    }
+    // Fallback — flat line at initial frequency
+    return Array.from({ length: 5 }, (_, i) => ({
+      time:      new Date(Date.now() - (4 - i) * 3000).toLocaleTimeString(),
+      frequency: initialFreq,
     }))
-  )
+  })
 
-  // Update graph on live Socket.io alert for this node
+  // Update graph when a live alert arrives for THIS node
   useEffect(() => {
-    if (!liveAlert || liveAlert.nodeId !== nodeId) return
-    setData((prev) => {
-      const next = [
-        ...prev,
-        { time: new Date().toLocaleTimeString(), frequency: liveAlert.peakFrequency },
-      ]
+    if (!liveAlert) return
+    if (liveAlert.nodeId !== nodeId) return
+    if (liveAlert.peakFrequency == null) return
+
+    setData(prev => {
+      const next = [...prev, {
+        time:      new Date(liveAlert.timestamp || Date.now()).toLocaleTimeString(),
+        frequency: liveAlert.peakFrequency,
+      }]
       return next.slice(-maxPoints)
     })
   }, [liveAlert, nodeId])
 
-  // Simulate small fluctuations when no live data arrives
+  // Simulate fluctuations only for simulated sensors — never for real sensor
   useEffect(() => {
+    if (nodeId === REAL_SENSOR_ID) return
+    if (!nodeId.startsWith('Simulated')) return
+
     const id = setInterval(() => {
-      setData((prev) => {
+      setData(prev => {
         const last = prev[prev.length - 1]
-        const next = [
-          ...prev,
-          {
-            time:      new Date().toLocaleTimeString(),
-            frequency: Math.max(50, last.frequency + (Math.random() - 0.5) * 40),
-          },
-        ]
+        const next = [...prev, {
+          time:      new Date().toLocaleTimeString(),
+          frequency: Math.max(50, Math.min(2000, last.frequency + (Math.random() - 0.5) * 60)),
+        }]
         return next.slice(-maxPoints)
       })
     }, 3000)
     return () => clearInterval(id)
-  }, [])
+  }, [nodeId])
 
   return (
     <div className="w-full h-48">
@@ -139,7 +138,7 @@ function FrequencyGraph({ nodeId, initialFreq, severity, liveAlert }) {
 // Individual sensor accordion item
 // ---------------------------------------------------------------------------
 
-function SensorCard({ node, liveAlert }) {
+function SensorCard({ node, liveAlert, alerts }) {
   const config     = severityConfig[node.severity] || severityConfig.low
   const city       = getClosestCity(node.lat, node.lng)
   const regionRisk = getRegionRisk(node.lat, node.lng)
@@ -313,6 +312,7 @@ function SensorCard({ node, liveAlert }) {
                   initialFreq={node.peakFrequency}
                   severity={node.severity}
                   liveAlert={liveAlert}
+                  alerts={alerts}
                 />
               </div>
             </div>
@@ -330,25 +330,29 @@ function SensorCard({ node, liveAlert }) {
 
 export default function SensorList({ alerts, liveAlert }) {
   const sensorNodes = useMemo(() => {
-    if (!alerts || alerts.length === 0) return simulatedNodes
-    const nodeMap = {}
-    alerts.forEach((alert) => {
-      if (
-        !nodeMap[alert.nodeId] ||
-        new Date(alert.timestamp) > new Date(nodeMap[alert.nodeId].timestamp)
-      ) {
-        nodeMap[alert.nodeId] = alert
-      }
-    })
-    const real = Object.values(nodeMap).map((a) => ({
-      nodeId:        a.nodeId,
-      lat:           a.lat,
-      lng:           a.lng,
-      peakFrequency: a.peakFrequency,
-      severity:      a.severity,
-    }))
-    return real.length > 0 ? real : simulatedNodes
-  }, [alerts])
+    const nodes = [...defaultSensorNodes]
+
+    if (!alerts || alerts.length === 0) return nodes
+
+    const realAlerts = alerts.filter(a => a.nodeId === REAL_SENSOR_ID)
+    if (realAlerts.length === 0) return nodes
+
+    const latest = realAlerts.sort(
+      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    )[0]
+
+    return nodes.map(node =>
+      node.nodeId === REAL_SENSOR_ID
+        ? {
+            ...node,
+            lat:           latest.lat,
+            lng:           latest.lng,
+            peakFrequency: latest.peakFrequency,
+            severity:      latest.severity,
+          }
+        : node
+    )
+  }, [alerts, liveAlert])
 
   return (
     <div className="relative flex-1 overflow-y-auto alert-scroll bg-[#0f172a]">
@@ -373,7 +377,7 @@ export default function SensorList({ alerts, liveAlert }) {
         <div className="px-8 py-6 border-b border-white/10 bg-black/40 backdrop-blur-sm">
           <h1 className="text-xl font-bold text-white tracking-tight">Sensor Nodes</h1>
           <p className="text-sm text-[#475569] mt-0.5">
-            {sensorNodes.length} nodes active — click any node to expand details
+            4 nodes active (1 real, 3 simulated) — click any node to expand details
           </p>
         </div>
 
@@ -398,7 +402,7 @@ export default function SensorList({ alerts, liveAlert }) {
         {/* Accordion list */}
         <AccordionPrimitive.Root type="single" collapsible className="w-full">
           {sensorNodes.map((node) => (
-            <SensorCard key={node.nodeId} node={node} liveAlert={liveAlert} />
+            <SensorCard key={node.nodeId} node={node} liveAlert={liveAlert} alerts={alerts} />
           ))}
         </AccordionPrimitive.Root>
 

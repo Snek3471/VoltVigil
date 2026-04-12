@@ -7,6 +7,7 @@ import {
   MapControls,
   useMap,
 } from '@/components/ui/map'
+import { defaultSensorNodes, REAL_SENSOR_ID } from '@/data/sensorNodes'
 
 function MapBoundsFixer() {
   const { map, isLoaded } = useMap()
@@ -36,20 +37,6 @@ function MapBoundsFixer() {
   return null
 }
 
-const simulatedNodes = [
-  { nodeId: 'sensor-01', lat: 38.90, lng: -77.03,  peakFrequency: 847,  severity: 'high'     },
-  { nodeId: 'sensor-02', lat: 40.71, lng: -74.00,  peakFrequency: 312,  severity: 'low'      },
-  { nodeId: 'sensor-03', lat: 34.05, lng: -118.24, peakFrequency: 1850, severity: 'critical'  },
-  { nodeId: 'sensor-04', lat: 41.87, lng: -87.62,  peakFrequency: 640,  severity: 'medium'   },
-  { nodeId: 'sensor-05', lat: 29.76, lng: -95.36,  peakFrequency: 278,  severity: 'low'      },
-  { nodeId: 'sensor-06', lat: 33.44, lng: -112.07, peakFrequency: 920,  severity: 'high'     },
-  { nodeId: 'sensor-07', lat: 47.60, lng: -122.33, peakFrequency: 510,  severity: 'medium'   },
-  { nodeId: 'sensor-08', lat: 25.76, lng: -80.19,  peakFrequency: 1760, severity: 'critical'  },
-  { nodeId: 'sensor-09', lat: 39.95, lng: -75.16,  peakFrequency: 190,  severity: 'low'      },
-  { nodeId: 'sensor-10', lat: 32.77, lng: -96.79,  peakFrequency: 1100, severity: 'high'     },
-  { nodeId: 'sensor-11', lat: 37.77, lng: -122.41, peakFrequency: 430,  severity: 'medium'   },
-  { nodeId: 'sensor-12', lat: 42.36, lng: -71.05,  peakFrequency: 220,  severity: 'low'      },
-]
 
 const severityConfig = {
   critical: {
@@ -179,27 +166,28 @@ function SensorMarker({ node }) {
 
 export default function MapView({ alerts }) {
   const sensorNodes = useMemo(() => {
-    if (!alerts || alerts.length === 0) return simulatedNodes
+    const nodes = [...defaultSensorNodes]
 
-    const nodeMap = {}
-    alerts.forEach((alert) => {
-      if (
-        !nodeMap[alert.nodeId] ||
-        new Date(alert.timestamp) > new Date(nodeMap[alert.nodeId].timestamp)
-      ) {
-        nodeMap[alert.nodeId] = alert
-      }
-    })
+    if (!alerts || alerts.length === 0) return nodes
 
-    const real = Object.values(nodeMap).map((alert) => ({
-      nodeId:        alert.nodeId,
-      lat:           alert.lat,
-      lng:           alert.lng,
-      peakFrequency: alert.peakFrequency,
-      severity:      alert.severity,
-    }))
+    const realAlerts = alerts.filter(a => a.nodeId === REAL_SENSOR_ID)
+    if (realAlerts.length === 0) return nodes
 
-    return real.length > 0 ? real : simulatedNodes
+    const latest = realAlerts.sort(
+      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    )[0]
+
+    return nodes.map(node =>
+      node.nodeId === REAL_SENSOR_ID
+        ? {
+            ...node,
+            lat:           latest.lat,
+            lng:           latest.lng,
+            peakFrequency: latest.peakFrequency,
+            severity:      latest.severity,
+          }
+        : node
+    )
   }, [alerts])
 
   return (

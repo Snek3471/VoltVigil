@@ -105,13 +105,14 @@ export function TeleGridGlobe({
     const canvas = canvasRef.current
     if (!canvas) return
 
-    let animId: number
+    let animId = 0
+    let resizeObserver: ResizeObserver | null = null
 
     function init() {
-      const w = canvas!.offsetWidth
+      const w = canvas.offsetWidth
       if (w === 0 || globeRef.current) return
 
-      globeRef.current = createGlobe(canvas!, {
+      globeRef.current = createGlobe(canvas, {
         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         width:            w,
         height:           w,
@@ -140,24 +141,26 @@ export function TeleGridGlobe({
         animId = requestAnimationFrame(tick)
       }
       tick()
-      // Fade in
-      setTimeout(() => { if (canvas) canvas.style.opacity = "1" })
+      setTimeout(() => {
+        if (canvas) canvas.style.opacity = "1"
+      })
     }
 
     if (canvas.offsetWidth > 0) {
       init()
     } else {
-      const ro = new ResizeObserver((entries) => {
+      resizeObserver = new ResizeObserver((entries) => {
         if (entries[0]?.contentRect.width > 0) {
-          ro.disconnect()
+          resizeObserver?.disconnect()
+          resizeObserver = null
           init()
         }
       })
-      ro.observe(canvas)
-      return () => ro.disconnect()
+      resizeObserver.observe(canvas)
     }
 
     return () => {
+      resizeObserver?.disconnect()
       cancelAnimationFrame(animId)
       globeRef.current?.destroy()
       globeRef.current = null

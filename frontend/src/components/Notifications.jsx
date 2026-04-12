@@ -5,6 +5,7 @@ import {
   deleteSubscriber,
   getNotificationLog,
 } from '../services/api';
+import { DitheringShader } from '@/components/ui/dithering-shader';
 
 const SEVERITY_BADGE = {
   critical: 'bg-red-500/20 text-red-300 border border-red-500/30',
@@ -106,7 +107,28 @@ const Notifications = () => {
     });
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col">
+    <div className="relative flex-1 overflow-hidden flex flex-col bg-[#0a0a0f]">
+
+      {/* Ripple dithering shader — absolute so it stays within the content area */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <DitheringShader
+          shape="ripple"
+          type="4x4"
+          colorBack="#000810"
+          colorFront="#003366"
+          pxSize={4}
+          speed={0.3}
+          width={1920}
+          height={1080}
+          style={{ width: '100%', height: '100%' }}
+        />
+      </div>
+
+      {/* Subtle dark overlay for readability */}
+      <div className="absolute inset-0 z-[1] pointer-events-none bg-black/60" />
+
+      {/* All content sits above the shader */}
+      <div className="relative z-[2] flex flex-col flex-1 min-h-0 overflow-hidden">
 
       {/* Page header */}
       <div className="px-8 py-6 border-b border-[#1e293b] flex-shrink-0">
@@ -313,6 +335,8 @@ const Notifications = () => {
 
           </div>
         </div>
+      </div>
+
       </div>
     </div>
   );
