@@ -1,4 +1,4 @@
-# TeleGrid ML Service
+# VoltVigil ML Service
 
 Trained on real corona discharge data collected from INMP441 MEMS microphone.
 

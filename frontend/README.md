@@ -1,4 +1,4 @@
-# TeleGrid Frontend
+# VoltVigil Frontend
 
 Real-time power grid fault detection dashboard built with React, Vite, Leaflet, Recharts, and Socket.io.
 

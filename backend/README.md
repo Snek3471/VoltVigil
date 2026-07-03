@@ -1,4 +1,4 @@
-# TeleGrid Backend
+# VoltVigil Backend
 
 Real-time power grid fault detection API built with Node.js, Express, Socket.io, and MongoDB.
 
