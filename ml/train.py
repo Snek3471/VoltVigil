@@ -2,19 +2,16 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import (
     accuracy_score, classification_report,
     confusion_matrix, roc_auc_score
 )
-from sklearn.utils import resample
 import joblib
 import warnings
 warnings.filterwarnings('ignore')
 
 print("=" * 50)
-print("TeleGrid Corona Discharge ML Trainer")
+print("VoltVigil Corona Discharge ML Trainer")
 print("Real data from INMP441 microphone module")
 print("=" * 50)
 

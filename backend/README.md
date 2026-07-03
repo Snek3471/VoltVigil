@@ -33,7 +33,7 @@ Server starts on `http://localhost:5000` by default.
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/api/alerts` | Ingest a new fault alert |
-| `GET` | `/api/alerts` | List all alerts (supports `?severity=` and `?nodeId=` filters) |
+| `GET` | `/api/alerts` | List alerts, most recent first, capped at 500 (supports `?severity=` and `?nodeId=` filters) |
 | `GET` | `/api/alerts/:id` | Get single alert by ID |
 | `DELETE` | `/api/alerts/:id` | Delete alert by ID |
 

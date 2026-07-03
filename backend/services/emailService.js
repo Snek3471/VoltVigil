@@ -20,7 +20,7 @@ function smtpConfigured() {
 function getMailFrom() {
   if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
   const user = process.env.EMAIL_USER;
-  if (user) return `TeleGrid Alerts <${user}>`;
+  if (user) return `VoltVigil Alerts <${user}>`;
   return undefined;
 }
 
@@ -68,7 +68,7 @@ function buildHtmlEmail(alert) {
         <!-- Header -->
         <tr>
           <td style="padding:24px 32px;border-bottom:2px solid #334155;">
-            <span style="font-size:22px;font-weight:bold;color:#ffffff;font-family:Arial,sans-serif;">Tele</span><span style="font-size:22px;font-weight:bold;color:#facc15;font-family:Arial,sans-serif;">Grid</span>
+            <span style="font-size:22px;font-weight:bold;color:#ffffff;font-family:Arial,sans-serif;">Volt</span><span style="font-size:22px;font-weight:bold;color:#facc15;font-family:Arial,sans-serif;">Vigil</span>
             <span style="font-size:12px;color:#64748b;margin-left:12px;font-family:Arial,sans-serif;">Power Grid Fault Detection</span>
           </td>
         </tr>
@@ -80,7 +80,7 @@ function buildHtmlEmail(alert) {
               <span style="display:inline-block;background-color:${severityColor};color:#ffffff;font-weight:bold;font-size:12px;padding:4px 14px;border-radius:4px;letter-spacing:1px;font-family:Arial,sans-serif;">${severityLabel}</span>
             </div>
             <h2 style="margin:8px 0 0 0;font-size:18px;color:#f1f5f9;font-family:Arial,sans-serif;font-weight:600;">Grid Fault Detected</h2>
-            <p style="margin:4px 0 20px 0;color:#94a3b8;font-size:13px;font-family:Arial,sans-serif;">A fault event has been detected by TeleGrid monitoring.</p>
+            <p style="margin:4px 0 20px 0;color:#94a3b8;font-size:13px;font-family:Arial,sans-serif;">A fault event has been detected by VoltVigil monitoring.</p>
             <hr style="border:none;border-top:1px solid #334155;margin:0;">
           </td>
         </tr>
@@ -132,8 +132,8 @@ function buildHtmlEmail(alert) {
         <!-- Footer -->
         <tr>
           <td style="padding:20px 32px;border-top:1px solid #334155;">
-            <p style="margin:0;font-size:12px;color:#475569;font-family:Arial,sans-serif;">This alert was sent by TeleGrid Real-Time Power Grid Fault Detection System.</p>
-            <p style="margin:6px 0 0 0;font-size:12px;color:#475569;font-family:Arial,sans-serif;">To unsubscribe, visit the TeleGrid dashboard &rsaquo; Notifications tab.</p>
+            <p style="margin:0;font-size:12px;color:#475569;font-family:Arial,sans-serif;">This alert was sent by VoltVigil Real-Time Power Grid Fault Detection System.</p>
+            <p style="margin:6px 0 0 0;font-size:12px;color:#475569;font-family:Arial,sans-serif;">To unsubscribe, visit the VoltVigil dashboard &rsaquo; Notifications tab.</p>
           </td>
         </tr>
 
@@ -182,7 +182,7 @@ async function sendAlertEmails(alert) {
     return;
   }
 
-  const subject = `⚡ TeleGrid Alert — ${alert.severity.toUpperCase()} Fault Detected at ${alert.nodeId}`;
+  const subject = `⚡ VoltVigil Alert — ${alert.severity.toUpperCase()} Fault Detected at ${alert.nodeId}`;
   const html = buildHtmlEmail(alert);
 
   let notified = 0;

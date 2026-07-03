@@ -2,7 +2,7 @@ const Alert = require('../models/Alert');
 const { sendAlertEmails } = require('../services/emailService');
 const { Agent } = require('http');
 
-const lastAlertSent = {};
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5001';
 
 // Persistent HTTP agent for ML — reuses connections
 const mlAgent = new Agent({
@@ -87,7 +87,7 @@ exports.createAlert = async (req, res) => {
     // ML runs AFTER response — fully async, never blocks
     setImmediate(async () => {
       try {
-        const mlResponse = await fetch('http://localhost:5001/predict', {
+        const mlResponse = await fetch(`${ML_SERVICE_URL}/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ features }),
@@ -115,17 +115,9 @@ exports.createAlert = async (req, res) => {
           // Push ML-updated alert to dashboard
           req.io.emit('alert_updated', updated);
 
-          // Email check using ML severity
+          // emailService owns severity filtering and the per-node cooldown
           try {
-            const now = Date.now();
-            const last = lastAlertSent[nodeId] || 0;
-            if (
-              now - last > 5 * 60 * 1000 &&
-              ['high', 'critical'].includes(mlData.severity)
-            ) {
-              lastAlertSent[nodeId] = now;
-              await sendAlertEmails(updated);
-            }
+            await sendAlertEmails(updated);
           } catch (e) {
             console.error('[Email] Failed:', e.message);
           }

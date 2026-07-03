@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const api = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,10 +17,6 @@ export const getAlerts = (filters = {}) => {
 };
 
 export const deleteAlert = (id) => api.delete(`/api/alerts/${id}`);
-
-/** POST fake alerts for testing (map, feed, socket). Query: count (1–25, default 8) */
-export const simulateAlerts = (count = 8) =>
-  api.post('/api/alerts/simulate', null, { params: { count } });
 
 // Subscriber management
 export const getSubscribers = () => api.get('/api/subscribers');

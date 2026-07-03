@@ -34,6 +34,7 @@ def load_model():
 
 def risk_from_prob(p):
     if p >= 0.70: return 'HIGH RISK'
+    if p >= 0.50: return 'ELEVATED RISK'
     if p >= 0.35: return 'MEDIUM RISK'
     return 'LOW RISK'
 

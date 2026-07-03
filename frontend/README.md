@@ -1,6 +1,6 @@
 # VoltVigil Frontend
 
-Real-time power grid fault detection dashboard built with React, Vite, Leaflet, Recharts, and Socket.io.
+Real-time power grid fault detection dashboard built with React, Vite, MapLibre GL, Recharts, and Socket.io.
 
 ## Prerequisites
 
@@ -12,6 +12,8 @@ Real-time power grid fault detection dashboard built with React, Vite, Leaflet, 
 ```bash
 cd frontend
 npm install
+cp .env.example .env
+# Edit .env if the backend isn't on localhost:5000
 ```
 
 ## Run
@@ -23,12 +25,15 @@ npm run dev
 
 Dashboard opens at `http://localhost:5173`.
 
-## Features
+## Tabs
 
-- **Map View** — Leaflet map centered on Washington D.C. with 12 sensor node markers, color-coded by severity
-- **FFT Chart** — Real-time line chart showing peak frequency over the last 20 alerts, with a 2000 Hz threshold reference line
-- **Alert Feed** — Scrollable live feed of the 50 most recent alerts, updated instantly via Socket.io
-- **Status Bar** — Live connection status indicator and total alert count
+- **Home** — Landing page with a live-updating 3D globe of sensor nodes
+- **Map** — MapLibre GL map (CARTO dark basemap) locked to the continental US, with 4 sensor node markers (1 live + 3 simulated for demo), color-coded by severity
+- **Sensors** — Per-node accordion with location, regional risk, live peak-frequency graph, and detection thresholds
+- **Notifications** — Subscriber signup and notification log
+- **About** — Project overview and live system status
+
+All tabs update in real time via Socket.io (`new_alert` / `alert_updated`).
 
 ## Severity Colors
 

@@ -11,7 +11,7 @@ interface SensorMarker {
   nodeId: string
 }
 
-interface TeleGridGlobeProps {
+interface VoltVigilGlobeProps {
   sensors?: SensorMarker[]
   className?: string
   speed?: number
@@ -53,11 +53,11 @@ const MARKER_SIZE: Record<string, number> = {
   low:      0.04,
 }
 
-export function TeleGridGlobe({
+export function VoltVigilGlobe({
   sensors = defaultSensors,
   className = "",
   speed = 0.003,
-}: TeleGridGlobeProps) {
+}: VoltVigilGlobeProps) {
   const canvasRef             = useRef<HTMLCanvasElement>(null)
   const pointerInteracting    = useRef<{ x: number; y: number } | null>(null)
   const dragOffset            = useRef({ phi: 0, theta: 0 })

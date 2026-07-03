@@ -21,7 +21,7 @@ app.use((req, res, next) => { req.io = io; next(); });
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'TeleGrid backend running', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', message: 'VoltVigil backend running', timestamp: new Date().toISOString() });
 });
 
 // Routes
@@ -49,7 +49,7 @@ function getLocalIP() {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[Server] TeleGrid backend running on port ${PORT}`);
+  console.log(`[Server] VoltVigil backend running on port ${PORT}`);
   console.log(`         Local:   http://localhost:${PORT}`);
   console.log(`         Network: http://${getLocalIP()}:${PORT}`);
   console.log(`[ESP32]  POST alerts to: http://${getLocalIP()}:${PORT}/api/alerts`);

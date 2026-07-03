@@ -277,7 +277,7 @@ function SensorCard({ node, liveAlert, alerts }) {
 
               <div className="bg-black/30 backdrop-blur-sm rounded-lg p-4 border border-white/10">
                 <p className="text-xs text-[#475569] uppercase tracking-wider mb-2">Sample Rate</p>
-                <p className="text-white font-mono text-sm">8,000 Hz</p>
+                <p className="text-white font-mono text-sm">16,000 Hz</p>
               </div>
 
               <div className="bg-black/30 backdrop-blur-sm rounded-lg p-4 border border-white/10">

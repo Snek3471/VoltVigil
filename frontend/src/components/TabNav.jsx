@@ -17,7 +17,7 @@ const TabNav = ({ activeTab, onTabChange, alertCount, isConnected, overlay = fal
     {/* Left — wordmark */}
     <div className="flex items-center gap-2 flex-shrink-0">
       <span className="text-white font-black text-xl tracking-tight select-none">
-        TELE<span className="text-blue-300">GRID</span>
+VOLT<span className="text-blue-300">VIGIL</span>
       </span>
     </div>
 

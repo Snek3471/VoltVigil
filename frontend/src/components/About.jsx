@@ -136,7 +136,7 @@ const About = ({ alerts, isConnected }) => {
           {/* Header text */}
           <div className="relative z-10">
             <h1 className="text-2xl font-bold text-white tracking-tight">
-              About TeleGrid
+              About VoltVigil
             </h1>
             <p className="text-sm text-[#475569] mt-0.5">
               No Surprises. — Real-time power grid fault detection
@@ -161,7 +161,7 @@ const About = ({ alerts, isConnected }) => {
                 <OverviewCard
                   icon="📡"
                   title="How It Works"
-                  body="ESP32 microcontrollers paired with INMP441 MEMS microphones sample audio at 8 kHz. Each node applies a 512-sample Hamming-windowed FFT, identifies the peak frequency bin, classifies it by severity, and transmits a structured alert to the backend over WiFi."
+                  body="ESP32 microcontrollers paired with INMP441 MEMS microphones sample audio at 16 kHz. Each node applies a 1024-sample Hann-windowed FFT, identifies the peak frequency bin, classifies it by severity, and transmits a structured alert to the backend over WiFi."
                 />
                 <OverviewCard
                   icon="🗺️"
@@ -180,7 +180,7 @@ const About = ({ alerts, isConnected }) => {
                   number="01"
                   role="Frontend & Backend"
                   subtitle="Full Stack"
-                  tech="React dashboard, Node.js REST API, Socket.io real-time events, MongoDB persistence, Leaflet map, Recharts FFT visualization"
+                  tech="React dashboard, Node.js REST API, Socket.io real-time events, MongoDB persistence, MapLibre GL map, Recharts FFT visualization"
                 />
                 <TeamCard
                   index={1}

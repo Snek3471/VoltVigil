@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { ShaderAnimation } from './ui/shader-animation';
 import { AnimatedText } from '@/components/ui/animated-text';
 import { TextScramble } from '@/components/ui/text-scramble';
-import { TeleGridGlobe } from '@/components/ui/telegrid-globe';
+import { VoltVigilGlobe } from '@/components/ui/voltvigil-globe';
 import { defaultSensorNodes, REAL_SENSOR_ID } from '@/data/sensorNodes';
 
 const Home = ({ onTabChange, alerts = [] }) => {
@@ -60,7 +60,7 @@ const Home = ({ onTabChange, alerts = [] }) => {
         {/* ── LEFT — Hero text ──────────────────────────────────────── */}
         <div className="flex flex-col justify-center max-w-xl pl-16">
 
-          {/* TeleGrid. title with scramble */}
+          {/* VoltVigil. title with scramble */}
           <div
             onMouseEnter={() => {
               if (!isComplete) return;
@@ -80,7 +80,7 @@ const Home = ({ onTabChange, alerts = [] }) => {
               className="text-[7rem] font-black leading-none tracking-tighter text-white font-mono mb-6"
               style={{ fontWeight: 900 }}
             >
-              TeleGrid.
+              VoltVigil.
             </TextScramble>
           </div>
 
@@ -144,7 +144,7 @@ const Home = ({ onTabChange, alerts = [] }) => {
           </p>
 
           {/* Globe */}
-          <TeleGridGlobe
+          <VoltVigilGlobe
             sensors={sensorMarkers}
             className="w-[460px] h-[460px]"
             speed={0.003}
@@ -162,7 +162,7 @@ const Home = ({ onTabChange, alerts = [] }) => {
             </div>
             <div className="w-px h-8 bg-white/10" />
             <div className="text-center">
-              <p className="text-2xl font-black font-mono text-blue-400">8kHz</p>
+              <p className="text-2xl font-black font-mono text-blue-400">16kHz</p>
               <p className="text-xs text-[#475569] uppercase tracking-wider mt-1">
                 Sample Rate
               </p>

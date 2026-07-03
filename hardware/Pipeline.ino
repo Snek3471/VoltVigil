@@ -5,6 +5,7 @@
 #include <arduinoFFT.h>
 
 // ===== WIFI =====
+// Fill in for your network before flashing — do not commit real credentials.
 const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 const char* serverURL = "http://YOUR_BACKEND_HOST:5000/api/alerts";
