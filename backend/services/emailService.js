@@ -2,26 +2,32 @@ const nodemailer = require('nodemailer');
 const Subscriber = require('../models/Subscriber');
 const NotificationLog = require('../models/NotificationLog');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Real Gmail SMTP when EMAIL_USER/EMAIL_PASS are set; otherwise mock mode:
+// emails are built and logged (and recorded in the notification log) but never sent.
+const MOCK_EMAIL = !(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+const MOCK_FROM = 'VoltVigil Alerts <alerts@voltvigil.example>';
+
+const transporter = MOCK_EMAIL
+  ? nodemailer.createTransport({ jsonTransport: true })
+  : nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+if (MOCK_EMAIL) {
+  console.log('[Email] EMAIL_USER/EMAIL_PASS not set; using mock email (logged, not sent)');
+}
 
 // In-memory cooldown tracker: { nodeId: lastSuccessfulSendTimestamp }
 const lastAlertSent = {};
 
-function smtpConfigured() {
-  return Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
-}
-
 function getMailFrom() {
   if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
-  const user = process.env.EMAIL_USER;
-  if (user) return `VoltVigil Alerts <${user}>`;
-  return undefined;
+  if (MOCK_EMAIL) return MOCK_FROM;
+  return `VoltVigil Alerts <${process.env.EMAIL_USER}>`;
 }
 
 function formatCoordinates(lat, lng) {
@@ -148,16 +154,7 @@ async function sendAlertEmails(alert) {
   // Only send for high or critical
   if (!['high', 'critical'].includes(alert.severity)) return;
 
-  if (!smtpConfigured()) {
-    console.log('[Email] EMAIL_USER and EMAIL_PASS must be set to send mail; skipping');
-    return;
-  }
-
   const from = getMailFrom();
-  if (!from) {
-    console.log('[Email] Could not determine From address; skipping');
-    return;
-  }
 
   // Cooldown: skip if we successfully emailed this sensor within the last 5 minutes
   const now = Date.now();
@@ -195,7 +192,7 @@ async function sendAlertEmails(alert) {
         html,
       });
       notified++;
-      console.log(`[Email] Sent to ${sub.email}`);
+      console.log(`[Email]${MOCK_EMAIL ? '[mock]' : ''} Sent "${subject}" to ${sub.email}`);
     } catch (err) {
       console.error(`[Email] Failed to send to ${sub.email}:`, err.message);
     }

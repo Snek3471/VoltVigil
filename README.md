@@ -33,7 +33,7 @@ flowchart LR
 2. It **POSTs** the features and its location to the backend about once a second.
 3. The **backend** assigns an immediate rule-based severity, saves the reading to MongoDB, and pushes it to every dashboard over Socket.io without waiting for the classifier.
 4. In the background it calls the **ML service**, which returns a corona-discharge probability. The backend then updates the record and pushes an `alert_updated` event.
-5. For **high/critical** results it emails subscribers, with a 5-minute cooldown per sensor.
+5. For **high/critical** results it emails subscribers, with a 5-minute cooldown per sensor. Without Gmail credentials it runs in **mock email** mode: messages are built and logged, and the notification log fills in, but nothing is sent.
 
 ## Hardware
 
@@ -116,6 +116,8 @@ hardware/   Enclosure STL files
 
 ## Local setup
 
+No ESP32 or email account needed: the [no-hardware mode](#running-without-hardware) simulates the sensor, and email runs in mock mode by default.
+
 **Prerequisites:** Node.js 18+, Python 3.10+, MongoDB (local or Atlas), and Arduino IDE 2 for the firmware.
 
 ### 1. ML service
@@ -136,7 +138,7 @@ Run both scripts from inside `ml/`, because they use relative file paths.
 ```bash
 cd backend
 npm install
-cp .env.example .env             # set MONGO_URI; email settings are optional
+cp .env.example .env             # set MONGO_URI; leave EMAIL_* empty for mock email
 npm run dev                      # http://localhost:5000
 ```
 
@@ -151,7 +153,7 @@ cp .env.example .env             # VITE_API_URL, defaults to http://localhost:50
 npm run dev                      # http://localhost:5173
 ```
 
-### 4. Firmware
+### 4. Firmware (optional, needs an ESP32 + INMP441)
 
 1. In the Arduino IDE, install the **esp32** board package (Espressif). The sketch uses the legacy `driver/i2s.h` API from core 2.x; newer cores may print deprecation warnings.
 2. Install the **arduinoFFT** (v2.x) and **ArduinoJson** libraries from the Library Manager.
@@ -168,7 +170,7 @@ cd backend
 npm run simulate                 # options: --url http://localhost:5000 --interval 1000
 ```
 
-This replays rows from the labelled dataset, with ±5% jitter, as live readings from `sensor-01`. They go through the full pipeline (rule-based severity, ML classification, Socket.io updates, map and chart). The three simulated map nodes are static demo data in the frontend.
+This replays rows from the labelled dataset, with ±5% jitter, as live readings from `sensor-01`. Subscribe an address on the Notifications tab to see mock alert emails in the backend log. They go through the full pipeline (rule-based severity, ML classification, Socket.io updates, map and chart). The three simulated map nodes are static demo data in the frontend.
 
 ## What I'd improve next
 

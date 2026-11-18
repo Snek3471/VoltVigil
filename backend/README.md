@@ -13,7 +13,7 @@ Real-time power grid fault detection API built with Node.js, Express, Socket.io,
 cd backend
 npm install
 cp .env.example .env
-# Edit .env: MONGO_URI is required; EMAIL_* are optional
+# Edit .env: MONGO_URI is required; leave EMAIL_* empty for mock email (logged, not sent)
 ```
 
 ## Run
