@@ -8,8 +8,7 @@ An ESP32 sensor node listens for the acoustic signature of corona discharge on p
 
 ## Demo
 
-- **Video:** TODO: add demo video link
-- **Dashboard screenshot:** TODO: add `docs/dashboard.png` and embed it here
+![VoltVigil dashboard: landing page with the live sensor network globe](docs/dashboard.png)
 
 ## The problem
 
