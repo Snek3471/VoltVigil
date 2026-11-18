@@ -161,12 +161,12 @@ const About = ({ alerts, isConnected }) => {
                 <OverviewCard
                   icon="📡"
                   title="How It Works"
-                  body="ESP32 microcontrollers paired with INMP441 MEMS microphones sample audio at 16 kHz. Each node applies a 1024-sample Hann-windowed FFT, identifies the peak frequency bin, classifies it by severity, and transmits a structured alert to the backend over WiFi."
+                  body="ESP32 microcontrollers paired with INMP441 MEMS microphones sample audio at 16 kHz. Each node runs a 1024-point Hann-windowed FFT, averages 14 spectral features over one second, and sends them to the backend over WiFi. The backend assigns an instant rule-based severity, then a scikit-learn classifier refines it with a corona-discharge probability."
                 />
                 <OverviewCard
                   icon="🗺️"
                   title="How to Read the Map"
-                  body="Each circle marker represents one physical sensor node. Marker color indicates the most recent fault severity: green = low, yellow = medium, orange = high, red = critical. Click any marker to see the node ID, peak frequency, and last-seen timestamp."
+                  body="Each circle marker is a sensor node: one live ESP32 node plus three simulated demo nodes. Marker color indicates the most recent fault severity: green = low, yellow = medium, orange = high, red = critical. Click any marker to see the node ID, peak frequency, and last-seen timestamp."
                 />
               </div>
             </div>
@@ -180,7 +180,7 @@ const About = ({ alerts, isConnected }) => {
                   number="01"
                   role="Frontend & Backend"
                   subtitle="Full Stack"
-                  tech="React dashboard, Node.js REST API, Socket.io real-time events, MongoDB persistence, MapLibre GL map, Recharts FFT visualization"
+                  tech="React dashboard, Node.js REST API, Socket.io real-time events, MongoDB persistence, MapLibre GL map, Recharts live peak-frequency chart"
                 />
                 <TeamCard
                   index={1}
@@ -193,8 +193,8 @@ const About = ({ alerts, isConnected }) => {
                   index={2}
                   number="03"
                   role="Hardware"
-                  subtitle="Electrical Engineering"
-                  tech="Circuit design and PCB layout, weatherproof sensor housing, power management and battery backup, field deployment and mounting"
+                  subtitle="Enclosure & Wiring"
+                  tech="ESP32 to INMP441 I2S wiring, 3D-printed sensor housing and cap, audio data collection for model training"
                 />
               </div>
             </div>
@@ -219,8 +219,8 @@ const About = ({ alerts, isConnected }) => {
                   accent={isConnected ? 'text-green-400' : 'text-red-400'}
                 />
                 <StatCard
-                  label="Detection Range"
-                  value="2kHz"
+                  label="Analysis Band"
+                  value="20Hz–4kHz"
                   accent="text-blue-400"
                 />
               </div>
