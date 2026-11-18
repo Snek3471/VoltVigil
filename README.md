@@ -179,13 +179,6 @@ This replays rows from the labelled dataset, with ±5% jitter, as live readings 
 - **Separate readings from alerts.** Every 1-second reading is stored as an "alert" (about 86k documents per node per day). The "peak frequency" shown is estimated from band energies rather than taken from the actual FFT peak. A real system would store readings as a time series and raise alerts only on state changes.
 - **Production hardening.** The API has no authentication and allows any CORS origin, so anyone who can reach it can post or delete alerts and subscribers. There are also no automated tests or CI.
 
-## Team and my role
-
-This was built by a team at Bitcamp 2026.
-
-- **Team:** TODO: list teammates and link their GitHub profiles
-- **My role:** TODO: describe what you personally built (for example backend, dashboard, ML pipeline, firmware)
-
 ## License
 
 [MIT](LICENSE)
