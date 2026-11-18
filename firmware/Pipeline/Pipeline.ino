@@ -4,11 +4,12 @@
 #include <driver/i2s.h>
 #include <arduinoFFT.h>
 
-// ===== WIFI =====
-// Fill in for your network before flashing — do not commit real credentials.
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
-const char* serverURL = "http://YOUR_BACKEND_HOST:5000/api/alerts";
+// ===== WIFI / BACKEND =====
+// Credentials live in secrets.h (gitignored). Copy secrets.example.h to secrets.h and fill it in.
+#include "secrets.h"
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
+const char* serverURL = SERVER_URL;
 
 // ===== I2S PINS =====
 #define I2S_WS 15
