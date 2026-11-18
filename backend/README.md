@@ -13,7 +13,7 @@ Real-time power grid fault detection API built with Node.js, Express, Socket.io,
 cd backend
 npm install
 cp .env.example .env
-# Edit .env with your MongoDB URI if needed
+# Edit .env: MONGO_URI is required; EMAIL_* are optional
 ```
 
 ## Run
@@ -36,13 +36,26 @@ Server starts on `http://localhost:5000` by default.
 | `GET` | `/api/alerts` | List alerts, most recent first, capped at 500 (supports `?severity=` and `?nodeId=` filters) |
 | `GET` | `/api/alerts/:id` | Get single alert by ID |
 | `DELETE` | `/api/alerts/:id` | Delete alert by ID |
+| `POST` | `/api/subscribers` | Subscribe an email to high/critical alerts |
+| `GET` | `/api/subscribers` | List active subscribers |
+| `PATCH` | `/api/subscribers/:id` | Update subscriber preferences |
+| `DELETE` | `/api/subscribers/:id` | Unsubscribe |
+| `GET` | `/api/notifications/log` | Last 10 email batches sent |
+| `GET` | `/health` | Health check |
+
+## Scripts
+
+| Command | What it does |
+|---------|--------------|
+| `npm run simulate` | Mock ESP32: replays the labelled dataset as live readings from `sensor-01` |
+| `npm run latency` | Measures POST → Socket.io `new_alert` / `alert_updated` latency |
 
 ## Socket.io Events
 
 | Event | Direction | Payload |
 |-------|-----------|---------|
-| `connection_status` | Server → Client | `{ connected, message, socketId }` |
-| `new_alert` | Server → All clients | Alert document |
+| `new_alert` | Server → All clients | Alert document with rule-based severity (sent immediately) |
+| `alert_updated` | Server → All clients | Same alert after ML classification |
 
 ## Alert Schema
 
