@@ -209,8 +209,9 @@ async function sendAlertEmails(alert) {
       severity: alert.severity,
       subscribersNotified: notified,
       alertId: alert._id,
+      mock: MOCK_EMAIL,
     });
-    console.log(`[Email] Logged: ${notified} subscriber(s) notified for ${alert.nodeId}`);
+    console.log(`[Email] Logged: ${notified} subscriber(s) ${MOCK_EMAIL ? 'mock-notified (not delivered)' : 'notified'} for ${alert.nodeId}`);
   } catch (err) {
     console.error('[Email] Failed to save notification log:', err.message);
   }

@@ -17,6 +17,11 @@ const notificationLogSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  // true when sent via mock email (logged only, never delivered)
+  mock: {
+    type: Boolean,
+    default: false,
+  },
   alertId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Alert',

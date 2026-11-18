@@ -321,7 +321,7 @@ const Notifications = () => {
                       </div>
                       <div className="flex items-center gap-6">
                         <span className="text-xs text-[#94a3b8]">
-                          {log.subscribersNotified} notified
+                          {log.subscribersNotified} {log.mock ? 'mock (not sent)' : 'notified'}
                         </span>
                         <span className="text-xs text-[#475569] font-mono tabular-nums">
                           {formatLogTime(log.sentAt)}
