@@ -17,32 +17,14 @@ const useSocket = () => {
       reconnectionDelayMax: 2000,
     });
 
-    socket.on('connect', () => {
-      console.log('[Socket.io] Connected:', socket.id);
-      setIsConnected(true);
-    });
+    socket.on('connect', () => setIsConnected(true));
+    socket.on('disconnect', () => setIsConnected(false));
 
-    socket.on('disconnect', (reason) => {
-      console.log('[Socket.io] Disconnected:', reason);
-      setIsConnected(false);
-    });
-
-    socket.on('connection_status', (data) => {
-      console.log('[Socket.io] Server confirmed connection:', data);
-    });
-
-    socket.on('new_alert', (alert) => {
-      console.log('[Socket.io] New alert received:', alert);
-      setLatestAlert(alert);
-    });
-
-    socket.on('alert_updated', (alert) => {
-      console.log('[Socket.io] Alert updated with ML:', alert);
-      setLatestAlert(alert);
-    });
+    // new_alert: threshold severity, sent immediately; alert_updated: ML-enriched version
+    socket.on('new_alert', setLatestAlert);
+    socket.on('alert_updated', setLatestAlert);
 
     return () => {
-      console.log('[Socket.io] Cleaning up connection');
       socket.disconnect();
     };
   }, []);
